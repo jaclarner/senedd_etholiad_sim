@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/senedd_etholiad_sim/static/css/main.7ab0091b.css",
+    "main.js": "/senedd_etholiad_sim/static/js/main.ae65b093.js",
+    "index.html": "/senedd_etholiad_sim/index.html",
+    "main.7ab0091b.css.map": "/senedd_etholiad_sim/static/css/main.7ab0091b.css.map",
+    "main.ae65b093.js.map": "/senedd_etholiad_sim/static/js/main.ae65b093.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.7ab0091b.css",
+    "static/js/main.ae65b093.js"
+  ]
+}
