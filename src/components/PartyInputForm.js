@@ -129,7 +129,7 @@ function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} 
           {/* Regional swing configuration button - would be implemented in a future version */}
           {swingType === 'regional' && (
             <div className="regional-notice">
-              <p><i>Regional configuration is simplified in this version. Contact the developer for custom regional scenarios.</i></p>
+              <p><i>(Currently trying to ge this to work - check back soon!)</i></p>
             </div>
           )}
         </div>

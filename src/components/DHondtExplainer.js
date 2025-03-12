@@ -13,8 +13,6 @@ function DHondtExplainer({ allocationHistory, seatStability, votesNeededToChange
   const [currentRound, setCurrentRound] = useState(0);
   // State to control animation
   const [isPlaying, setIsPlaying] = useState(false);
-  // State for sensitivity analysis
-  const [sensitivityFactor, setSensitivityFactor] = useState(0);
   // Reference for animation timer
   const animationTimerRef = useRef(null);
   
@@ -83,27 +81,11 @@ function DHondtExplainer({ allocationHistory, seatStability, votesNeededToChange
     setIsPlaying(false);
   };
   
-  // Handle sensitivity slider change
-  const handleSensitivityChange = (e) => {
-    setSensitivityFactor(parseFloat(e.target.value));
-  };
-  
   // Get current allocation data
   const currentAllocation = validAllocationHistory[currentRound] || validAllocationHistory[0];
   
-  // Calculate adjusted quotients based on sensitivity factor
-  const adjustedQuotients = currentAllocation.quotients ? currentAllocation.quotients.map(q => {
-    // Apply sensitivity adjustment - percentage change in vote share
-    const adjustmentFactor = 1 + (sensitivityFactor / 100);
-    return {
-      ...q,
-      votes: q.votes * adjustmentFactor,
-      quotient: (q.votes * adjustmentFactor) / (q.seats + 1)
-    };
-  }) : [];
-  
-  // Sort quotients by adjusted values
-  const sortedQuotients = [...adjustedQuotients].sort((a, b) => b.quotient - a.quotient);
+  // Sort quotients by value
+  const sortedQuotients = [...(currentAllocation.quotients || [])].sort((a, b) => b.quotient - a.quotient);
   
   // Get seat distribution for current round
   const seatDistribution = {};
@@ -131,7 +113,7 @@ function DHondtExplainer({ allocationHistory, seatStability, votesNeededToChange
       default: return "";
     }
   };
-  
+
   return (
     <div className="dhondt-visualization">
       <div className="visualization-controls">
@@ -307,68 +289,89 @@ function DHondtExplainer({ allocationHistory, seatStability, votesNeededToChange
         </div>
       </div>
       
-      {/* Uncertainty analysis section */}
+      {/* Sixth Seat Tipping Point */}
       <div className="uncertainty-analysis">
-        <h4>Seat Allocation Uncertainty Analysis</h4>
+        <h4>Sixth Seat Tipping Point</h4>
         
-        {/* What-if slider for sensitivity analysis */}
-        <div className="sensitivity-analysis">
-          <label htmlFor="sensitivity-slider">
-            Adjust vote shares (±5%): <span className="sensitivity-value">{sensitivityFactor > 0 ? '+' : ''}{sensitivityFactor}%</span>
-          </label>
-          <input 
-            type="range" 
-            id="sensitivity-slider" 
-            min="-5" 
-            max="5" 
-            step="0.1" 
-            value={sensitivityFactor}
-            onChange={handleSensitivityChange}
-            className="sensitivity-slider"
-          />
-          <div className="sensitivity-explanation">
-            <p>Move the slider to see how small changes in vote share could affect the final seat allocation.</p>
-          </div>
+        <div className="explanation">
+          <p>This analysis shows how much vote share would need to change for the final seat allocation to be different.</p>
         </div>
         
-        {/* Margin of the last seat */}
-        {votesNeededToChange && votesNeededToChange.possible && (
-          <div className="knife-edge-indicator">
-            <h5>Final Seat Margin Analysis</h5>
-            <div className="margin-value">
-              <p>
-                <strong>Last seat scenario:</strong> {formatPartyName(votesNeededToChange.lastSeatParty)} won the final seat, 
-                with {formatPartyName(votesNeededToChange.challengerParty)} as the runner-up.
-              </p>
-              <p>
-                <strong>Votes needed to change outcome:</strong> {formatDecimal(votesNeededToChange.votesNeeded, 1)} percentage points
-                would need to shift from {formatPartyName(votesNeededToChange.lastSeatParty)} to {formatPartyName(votesNeededToChange.challengerParty)}.
-              </p>
-              <p>
-                <strong>Quotient gap:</strong> {formatDecimal(votesNeededToChange.quotientGap, 2)} points separate the last allocated seat 
-                from the first unallocated seat.
-              </p>
+        {votesNeededToChange && votesNeededToChange.possible ? (
+          <div className="tipping-point-card primary-scenario">
+            <div className="scenario-header">
+              <h5>Sixth Seat Contest</h5>
+              <div className={`probability-badge ${
+                votesNeededToChange.votesNeeded < 1 ? 'high' : 
+                votesNeededToChange.votesNeeded < 3 ? 'medium' : 'low'
+              }`}>
+                {votesNeededToChange.votesNeeded < 1 ? 'Highly Possible' : 
+                votesNeededToChange.votesNeeded < 3 ? 'Possible' : 'Less Likely'}
+              </div>
             </div>
+            
+            <div className="parties-container">
+              <div className="party-badge" style={{backgroundColor: getPartyColor(votesNeededToChange.lastSeatParty)}}>
+                {formatPartyName(votesNeededToChange.lastSeatParty)}
+              </div>
+              
+              <div className="direction-arrow">
+                ⟶
+              </div>
+              
+              <div className="party-badge" style={{backgroundColor: getPartyColor(votesNeededToChange.challengerParty)}}>
+                {formatPartyName(votesNeededToChange.challengerParty)}
+              </div>
+            </div>
+            
+            <div className="shift-needed">
+              <div className="shift-description">
+                <p>
+                  If {formatPartyName(votesNeededToChange.lastSeatParty)} loses {formatDecimal(Math.abs(votesNeededToChange.votesNeeded), 1)}% 
+                  vote share to {formatPartyName(votesNeededToChange.challengerParty)}
+                </p>
+              </div>
+              
+              <div className={`shift-value ${
+                votesNeededToChange.votesNeeded < 1 ? 'high' : 
+                votesNeededToChange.votesNeeded < 3 ? 'medium' : 'low'
+              }`}>
+                {formatDecimal(Math.abs(votesNeededToChange.votesNeeded), 1)}%
+              </div>
+            </div>
+            
+            <div className="outcome">
+              <strong>Outcome:</strong> {formatPartyName(votesNeededToChange.challengerParty)} would win the final seat instead of {formatPartyName(votesNeededToChange.lastSeatParty)}
+            </div>
+          </div>
+        ) : (
+          <div className="no-tipping-points">
+            <p>Unable to calculate tipping point for the current allocation.</p>
           </div>
         )}
         
-        {/* Seat stability legend */}
-        <div className="seat-stability-legend">
-          <h5>Seat Stability Legend</h5>
+        {/* Legend for probability indicators */}
+        <div className="stability-legend">
+          <h5>Probability Legend</h5>
           <div className="stability-items">
             <div className="stability-item">
-              <span className="stability-indicator solid"></span>
-              <span>Solid Seats: Very likely to be allocated as shown</span>
+              <span className="probability-indicator high"></span>
+              <span>Highly Possible: Could occur with very small vote changes (&lt;1%)</span>
             </div>
             <div className="stability-item">
-              <span className="stability-indicator leaning"></span>
-              <span>Leaning Seats: Likely but could change with moderate shifts (1-3%)</span>
+              <span className="probability-indicator medium"></span>
+              <span>Possible: Could occur with moderate vote shifts (1-3%)</span>
             </div>
             <div className="stability-item">
-              <span className="stability-indicator toss-up"></span>
-              <span>Toss-up Seats: Could easily flip with small vote changes (&lt;1%)</span>
+              <span className="probability-indicator low"></span>
+              <span>Less Likely: Would require significant vote changes (&gt;3%)</span>
             </div>
           </div>
+        </div>
+        
+        <div className="methodology-note">
+          <p>Note: Tipping points are calculated using the D'Hondt quotient values from the table above. 
+          Smaller percentage shifts indicate more uncertain seat allocations.</p>
         </div>
       </div>
       

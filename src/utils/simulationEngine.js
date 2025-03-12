@@ -1,4 +1,4 @@
-/// src/utils/simulationEngine.js
+// src/utils/simulationEngine.js
 // Main simulation engine for Senedd Election Simulator
 
 import baselineVotes from '../data/baselineVotes';
@@ -10,7 +10,6 @@ import regionDefinitions from '../data/regionDefinitions';
 import {
   calculateNationalTotals,
   findClosestContests,
-  combineConstituencyVotes,
   applySwing,
   applyRegionalSwing,
   dHondt,
@@ -18,6 +17,132 @@ import {
   calculateEffectiveNumberOfParties,
   findViableCoalitions
 } from './simulationUtils';
+
+/**
+ * Safely combines vote percentages from two constituencies with robust error handling
+ * @param {Object} votes1 - Vote percentages from first constituency
+ * @param {Object} votes2 - Vote percentages from second constituency
+ * @param {String} constituency1 - Name of first constituency
+ * @param {String} constituency2 - Name of second constituency
+ * @returns {Object} Combined vote percentages
+ */
+function combineConstituencyVotes(votes1, votes2, constituency1, constituency2) {
+  const combined = {};
+  
+  // Add extensive input validation
+  if (votes1 === undefined || votes1 === null) {
+    console.error(`votes1 is ${votes1} for constituency ${constituency1}`);
+    votes1 = {};
+  }
+  
+  if (votes2 === undefined || votes2 === null) {
+    console.error(`votes2 is ${votes2} for constituency ${constituency2}`);
+    votes2 = {};
+  }
+  
+  if (typeof votes1 !== 'object') {
+    console.error(`votes1 is not an object for constituency ${constituency1}, it is a ${typeof votes1}`);
+    votes1 = {};
+  }
+  
+  if (typeof votes2 !== 'object') {
+    console.error(`votes2 is not an object for constituency ${constituency2}, it is a ${typeof votes2}`);
+    votes2 = {};
+  }
+  
+  // Get the number of voters in each constituency for weighting
+  const voters1 = constituencyVoters[constituency1];
+  const voters2 = constituencyVoters[constituency2];
+  
+  // Validate voter counts
+  if (!voters1 || isNaN(voters1)) {
+    console.error(`Invalid voter count for ${constituency1}: ${voters1}`);
+  }
+  
+  if (!voters2 || isNaN(voters2)) {
+    console.error(`Invalid voter count for ${constituency2}: ${voters2}`);
+  }
+  
+  // Use default values if needed
+  const validVoters1 = voters1 || 1;
+  const validVoters2 = voters2 || 1;
+  
+  // Calculate the weight for each constituency
+  const totalVoters = validVoters1 + validVoters2;
+  const weight1 = validVoters1 / totalVoters;
+  const weight2 = validVoters2 / totalVoters;
+  
+  // Safely gather all parties from both vote objects
+  let parties1 = [];
+  let parties2 = [];
+  
+  try {
+    parties1 = Object.keys(votes1);
+  } catch (error) {
+    console.error(`Error getting keys from votes1: ${error.message}`);
+    parties1 = [];
+  }
+  
+  try {
+    parties2 = Object.keys(votes2);
+  } catch (error) {
+    console.error(`Error getting keys from votes2: ${error.message}`);
+    parties2 = [];
+  }
+  
+  // Safely combine all party keys
+  const allParties = new Set([...parties1, ...parties2]);
+  
+  // If no parties were found, use a default set of parties
+  if (allParties.size === 0) {
+    console.warn("No parties found in either constituency, using default party list");
+    ['Labour', 'Conservatives', 'PlaidCymru', 'LibDems', 'Greens', 'Reform', 'Other'].forEach(p => allParties.add(p));
+  }
+  
+  // Combine the vote percentages with proper weighting
+  allParties.forEach(party => {
+    // Safely get vote percentages or default to 0
+    let v1 = 0, v2 = 0;
+    
+    try {
+      v1 = votes1[party] || 0;
+    } catch (error) {
+      console.error(`Error accessing ${party} in votes1: ${error.message}`);
+    }
+    
+    try {
+      v2 = votes2[party] || 0;
+    } catch (error) {
+      console.error(`Error accessing ${party} in votes2: ${error.message}`);
+    }
+    
+    // Combine with weights
+    combined[party] = (v1 * weight1) + (v2 * weight2);
+  });
+  
+  // Ensure the combined percentages add up to 100%
+  const totalPercentage = Object.values(combined).reduce((sum, value) => sum + value, 0);
+  
+  if (Math.abs(totalPercentage - 100) > 1) {
+    console.warn(`Combined vote percentages total ${totalPercentage}%, normalizing to 100%`);
+    
+    // Normalize to ensure total is 100%
+    Object.keys(combined).forEach(party => {
+      combined[party] = (combined[party] / totalPercentage) * 100;
+    });
+  }
+  
+  return combined;
+}
+
+// Helper function to validate constituency exists in baseline data
+function validateConstituency(constituencyName) {
+  if (!baselineVotes[constituencyName]) {
+    console.error(`Constituency "${constituencyName}" not found in baseline votes`);
+    return false;
+  }
+  return true;
+}
 
 /**
  * Main function to calculate election results
@@ -29,6 +154,13 @@ import {
  * @returns {Object} Complete election results with metrics
  */
 export function calculateElectionResults(nationalVotes, constituencyPairings, options = {}) {
+  console.log("Calculate Election Results called with:", { 
+    nationalVotes, 
+    constituencyPairings: Array.isArray(constituencyPairings) ? 
+      constituencyPairings.slice(0, 2) : 'Not an array',
+    options 
+  });
+  
   // Set default options
   const defaultOptions = {
     swingType: 'uniform',
@@ -37,25 +169,53 @@ export function calculateElectionResults(nationalVotes, constituencyPairings, op
   
   const mergedOptions = { ...defaultOptions, ...options };
   
+  // Validate input data
+  if (!Array.isArray(constituencyPairings)) {
+    console.error("constituencyPairings is not an array:", constituencyPairings);
+    throw new Error("Invalid constituency pairings data");
+  }
+  
+  if (constituencyPairings.length === 0) {
+    console.error("constituencyPairings is empty");
+    throw new Error("Empty constituency pairings data");
+  }
+  
+  // Check the structure of the first pairing
+  const firstPairing = constituencyPairings[0];
+  if (!Array.isArray(firstPairing)) {
+    console.error("Expected constituency pairing to be an array, got:", firstPairing);
+    throw new Error("Invalid pairing structure");
+  }
+  
+  if (firstPairing.length !== 2) {
+    console.error("Expected each pairing to contain exactly 2 constituencies, got:", firstPairing);
+    throw new Error("Invalid pairing structure: each pairing must contain exactly 2 constituencies");
+  }
+  
   // Calculate results for all constituencies with enhanced swing models
-  const constituencyResults = calculateAllConstituencies(nationalVotes, constituencyPairings, mergedOptions);
-  
-  // Calculate national totals
-  const nationalTotals = calculateNationalTotals(constituencyResults);
-  
-  // Calculate enhanced metrics for the election
-  const metrics = calculateElectionMetrics(nationalTotals, nationalVotes, constituencyResults);
-  
-  // Find the closest contests
-  const closestContests = findClosestContests(constituencyResults);
-  
-  // Return complete results with enhancements
-  return {
-    constituencyResults,
-    nationalTotals,
-    metrics,
-    closestContests
-  };
+  try {
+    const constituencyResults = calculateAllConstituencies(nationalVotes, constituencyPairings, mergedOptions);
+    
+    // Calculate national totals
+    const nationalTotals = calculateNationalTotals(constituencyResults);
+    
+    // Calculate enhanced metrics for the election
+    const metrics = calculateElectionMetrics(nationalTotals, nationalVotes, constituencyResults);
+    
+    // Find the closest contests
+    const closestContests = findClosestContests(constituencyResults);
+    
+    // Return complete results with enhancements
+    return {
+      constituencyResults,
+      nationalTotals,
+      metrics,
+      closestContests
+    };
+  } catch (error) {
+    console.error("Error in calculation:", error);
+    throw error;
+  }
 }
 
 /**
@@ -66,169 +226,221 @@ export function calculateElectionResults(nationalVotes, constituencyPairings, op
  * @returns {Array} Results for each constituency
  */
 function calculateAllConstituencies(nationalVotes, constituencyPairings, options = {}) {
+  console.log("Calculating for constituency pairings:", constituencyPairings.slice(0, 2), "...");
+  
   return constituencyPairings.map(pair => {
-    const constituencyName = pair.join(' + ');
-    
-    // Combine the baseline votes from the paired constituencies
-    const combinedBaseline = combineConstituencyVotes(
-      baselineVotes[pair[0]], 
-      baselineVotes[pair[1]], 
-      pair[0], 
-      pair[1]
-    );
-    
-    // Determine which region these constituencies belong to for regional swing
-    const region1 = getRegionForConstituency(pair[0]);
-    const region2 = getRegionForConstituency(pair[1]);
-    
-    let constituencyVotes;
-    if (options.swingType === 'regional' && options.regionalSwings) {
-      // If both constituencies are in the same region, apply that region's swing
-      if (region1 === region2 && options.regionalSwings[region1]) {
-        constituencyVotes = applyRegionalSwing(
-          combinedBaseline, 
-          nationalVotes, 
-          options.regionalSwings[region1]
-        );
-      } else {
-        // If in different regions, calculate weighted average of regional swings
-        const weight1 = constituencyVoters[pair[0]] / (constituencyVoters[pair[0]] + constituencyVoters[pair[1]]);
-        const weight2 = constituencyVoters[pair[1]] / (constituencyVoters[pair[0]] + constituencyVoters[pair[1]]);
-        
-        const regionalSwing1 = options.regionalSwings[region1] || {};
-        const regionalSwing2 = options.regionalSwings[region2] || {};
-        
-        const combinedRegionalSwing = {};
-        for (const party in nationalVotes) {
-          combinedRegionalSwing[party] = (
-            (regionalSwing1[party] || 0) * weight1 + 
-            (regionalSwing2[party] || 0) * weight2
+    try {
+      // Validate pair structure
+      if (!Array.isArray(pair) || pair.length !== 2) {
+        console.error("Invalid pair structure:", pair);
+        throw new Error(`Invalid constituency pair: ${JSON.stringify(pair)}`);
+      }
+      
+      const [constituency1, constituency2] = pair;
+      const constituencyName = `${constituency1} + ${constituency2}`;
+      
+      console.log(`Processing constituency pairing: ${constituencyName}`);
+      
+      // Check if constituency names exist in baseline data
+      const valid1 = validateConstituency(constituency1);
+      const valid2 = validateConstituency(constituency2);
+
+      // We'll proceed even if the constituencies are not valid, but with safer handling
+      
+      // Combine the baseline votes from the paired constituencies
+      const combinedBaseline = combineConstituencyVotes(
+        valid1 ? baselineVotes[constituency1] : {},
+        valid2 ? baselineVotes[constituency2] : {},
+        constituency1,
+        constituency2
+      );
+      
+      // Determine which region these constituencies belong to for regional swing
+      const region1 = getRegionForConstituency(constituency1);
+      const region2 = getRegionForConstituency(constituency2);
+      
+      let constituencyVotes;
+      if (options.swingType === 'regional' && options.regionalSwings) {
+        // If both constituencies are in the same region, apply that region's swing
+        if (region1 === region2 && options.regionalSwings[region1]) {
+          constituencyVotes = applyRegionalSwing(
+            combinedBaseline, 
+            nationalVotes, 
+            options.regionalSwings[region1]
+          );
+        } else {
+          // If in different regions, calculate weighted average of regional swings
+          const weight1 = (constituencyVoters[constituency1] || 1) / 
+                         ((constituencyVoters[constituency1] || 1) + (constituencyVoters[constituency2] || 1));
+          const weight2 = (constituencyVoters[constituency2] || 1) / 
+                         ((constituencyVoters[constituency1] || 1) + (constituencyVoters[constituency2] || 1));
+          
+          const regionalSwing1 = options.regionalSwings[region1] || {};
+          const regionalSwing2 = options.regionalSwings[region2] || {};
+          
+          const combinedRegionalSwing = {};
+          for (const party in nationalVotes) {
+            combinedRegionalSwing[party] = (
+              (regionalSwing1[party] || 0) * weight1 + 
+              (regionalSwing2[party] || 0) * weight2
+            );
+          }
+          
+          constituencyVotes = applyRegionalSwing(
+            combinedBaseline, 
+            nationalVotes, 
+            combinedRegionalSwing
           );
         }
-        
-        constituencyVotes = applyRegionalSwing(
+      } else {
+        // Apply standard swing (uniform or proportional)
+        constituencyVotes = applySwing(
           combinedBaseline, 
           nationalVotes, 
-          combinedRegionalSwing
+          options.swingType
         );
       }
-    } else {
-      // Apply standard swing (uniform or proportional)
-      constituencyVotes = applySwing(
-        combinedBaseline, 
-        nationalVotes, 
-        options.swingType
-      );
-    }
-    
-    // Calculate seats using D'Hondt method
-    const { results, allocationHistory } = dHondt(constituencyVotes, 6);
-    
-    // Calculate margin of the last seat and characterize seat stability
-    const lastAllocation = allocationHistory[allocationHistory.length - 1];
-    const sortedQuotients = [...lastAllocation.quotients].sort((a, b) => b.quotient - a.quotient);
-    
-    // Calculate margin between last allocated seat and first non-allocated seat
-    // This old approach is kept for the closestMargin calculation for backward compatibility
-    const lastAllocatedQuotient = sortedQuotients[5].quotient;
-    const firstNonAllocatedQuotient = sortedQuotients[6]?.quotient || 0;
-    
-    const closestMargin = {
-      value: lastAllocatedQuotient - firstNonAllocatedQuotient,
-      winningParty: sortedQuotients[5].party,
-      runnerUpParty: sortedQuotients[6]?.party || 'None',
-      // Calculate relative margin as percentage of winning quotient
-      relativeMargin: ((lastAllocatedQuotient - firstNonAllocatedQuotient) / lastAllocatedQuotient) * 100
-    };
-    
-    // Categorize each seat's stability
-    const seatStability = sortedQuotients.slice(0, 6).map((quotient, index) => {
-      let stability;
       
-      // Last seat might be a toss-up
-      if (index === 5) {
-        if (closestMargin.relativeMargin < 1) {
-          stability = "toss-up";
-        } else if (closestMargin.relativeMargin < 3) {
-          stability = "leaning";
-        } else {
+      // Calculate seats using D'Hondt method
+      const { results, allocationHistory } = dHondt(constituencyVotes, 6);
+      
+      // Calculate margin of the last seat and characterize seat stability
+      const lastAllocation = allocationHistory[allocationHistory.length - 1];
+      const sortedQuotients = [...lastAllocation.quotients].sort((a, b) => b.quotient - a.quotient);
+      
+      // Calculate margin between last allocated seat and first non-allocated seat
+      // This old approach is kept for the closestMargin calculation for backward compatibility
+      const lastAllocatedQuotient = sortedQuotients[5].quotient;
+      const firstNonAllocatedQuotient = sortedQuotients[6]?.quotient || 0;
+      
+      const closestMargin = {
+        value: lastAllocatedQuotient - firstNonAllocatedQuotient,
+        winningParty: sortedQuotients[5].party,
+        runnerUpParty: sortedQuotients[6]?.party || 'None',
+        // Calculate relative margin as percentage of winning quotient
+        relativeMargin: ((lastAllocatedQuotient - firstNonAllocatedQuotient) / lastAllocatedQuotient) * 100
+      };
+      
+      // Categorize each seat's stability
+      const seatStability = sortedQuotients.slice(0, 6).map((quotient, index) => {
+        let stability;
+        
+        // Last seat might be a toss-up
+        if (index === 5) {
+          if (closestMargin.relativeMargin < 1) {
+            stability = "toss-up";
+          } else if (closestMargin.relativeMargin < 3) {
+            stability = "leaning";
+          } else {
+            stability = "solid";
+          }
+        } 
+        // Second-to-last seat might be leaning
+        else if (index === 4) {
+          if (closestMargin.relativeMargin < 5) {
+            stability = "leaning";
+          } else {
+            stability = "solid";
+          }
+        }
+        // All other seats are likely solid
+        else {
           stability = "solid";
         }
-      } 
-      // Second-to-last seat might be leaning
-      else if (index === 4) {
-        if (closestMargin.relativeMargin < 5) {
-          stability = "leaning";
-        } else {
-          stability = "solid";
-        }
-      }
-      // All other seats are likely solid
-      else {
-        stability = "solid";
-      }
+        
+        return {
+          party: quotient.party,
+          stability: stability
+        };
+      });
+      
+      // Calculate votes needed to change outcome
+      const votesNeededToChange = calculateVotesNeededToChange(sortedQuotients, 6, allocationHistory);
       
       return {
-        party: quotient.party,
-        stability: stability
+        constituency: constituencyName,
+        results,
+        closestMargin,
+        allocationHistory,
+        votePercentages: constituencyVotes,
+        seatStability,
+        votesNeededToChange,
+        region1,
+        region2
       };
-    });
-    
-    // Calculate votes needed to change outcome
-    const votesNeededToChange = calculateVotesNeededToChange(sortedQuotients, 6);
-    
-    return {
-      constituency: constituencyName,
-      results,
-      closestMargin,
-      allocationHistory,
-      votePercentages: constituencyVotes,
-      seatStability,
-      votesNeededToChange,
-      region1,
-      region2
-    };
+    } catch (error) {
+      console.error(`Error calculating for constituency pair:`, pair, error);
+      // Return a placeholder result for this constituency pair with error info
+      return {
+        constituency: Array.isArray(pair) ? pair.join(' + ') : 'Invalid pair',
+        results: {},
+        error: error.message,
+        allocationHistory: [{quotients: [], winner: null}],
+        votePercentages: {},
+        seatStability: [],
+        votesNeededToChange: {possible: false}
+      };
+    }
   });
 }
 
 /**
  * Calculate how many votes would be needed to change the outcome
+ * This improved version calculates more accurate tipping points
  * @param {Array} sortedQuotients - Sorted quotients from D'Hondt calculation
  * @param {Number} seatsAllocated - Number of seats allocated
+ * @param {Array} allocationHistory - Full history of seat allocations in chronological order
  * @returns {Object} Information about votes needed to change outcome
  */
-function calculateVotesNeededToChange(sortedQuotients, seatsAllocated) {
-  // First, find all quotients with seats allocated > 0
-  const allocatedQuotients = sortedQuotients.filter(q => q.seats > 0);
-  
-  // Find quotients with no seats allocated
-  const unallocatedQuotients = sortedQuotients.filter(q => q.seats === 0);
-  
-  // No change possible if we don't have enough parties competing
-  if (allocatedQuotients.length === 0 || unallocatedQuotients.length === 0) {
-    return { possible: false };
+
+function calculateVotesNeededToChange(sortedQuotients, seatsAllocated, allocationHistory) {
+  try {
+    // Get the allocation of the 6th seat
+    const finalSeatAllocation = allocationHistory[seatsAllocated];
+    const finalSeatWinner = finalSeatAllocation.winner;
+    
+    // Get the quotient of the winning party for this seat
+    const winningQuotient = finalSeatAllocation.quotients.find(q => q.party === finalSeatWinner);
+    
+    if (!winningQuotient) {
+      return { possible: false };
+    }
+    
+    // For the runner-up, find the party with the next highest quotient
+    // that isn't the winner of this seat
+    const sortedQuotientsForRound = [...finalSeatAllocation.quotients]
+      .sort((a, b) => b.quotient - a.quotient);
+    
+    // Find the index of the winning quotient
+    const winnerIndex = sortedQuotientsForRound.findIndex(
+      q => q.party === finalSeatWinner && q.quotient === winningQuotient.quotient
+    );
+    
+    // The runner-up should be the next highest quotient
+    const runnerUpQuotient = sortedQuotientsForRound[winnerIndex + 1];
+    
+    if (!runnerUpQuotient) {
+      return { possible: false };
+    }
+    
+    // Calculate the vote shift needed
+    const quotientGap = winningQuotient.quotient - runnerUpQuotient.quotient;
+    const runnerUpDivisor = runnerUpQuotient.seats + 1;
+    const votesNeeded = quotientGap * runnerUpDivisor;
+    
+    return {
+      possible: true,
+      lastSeatParty: finalSeatWinner,
+      challengerParty: runnerUpQuotient.party,
+      votesNeeded: votesNeeded,
+      quotientGap: quotientGap,
+      lastSeatQuotient: winningQuotient.quotient,
+      challengerQuotient: runnerUpQuotient.quotient
+    };
+  } catch (error) {
+    console.error("Error calculating votes needed to change:", error);
+    return { possible: false, error: error.message };
   }
-  
-  // Find the party with the last allocated seat (lowest quotient among allocated)
-  const lastSeat = allocatedQuotients.sort((a, b) => a.quotient - b.quotient)[0];
-  
-  // Find the party with the highest quotient among unallocated seats
-  const firstNonSeat = unallocatedQuotients.sort((a, b) => b.quotient - a.quotient)[0];
-  
-  // Calculate needed quotient increase to overtake last allocated seat
-  const quotientGapNeeded = lastSeat.quotient - firstNonSeat.quotient;
-  
-  // Calculate votes needed based on the quotient gap and divisor
-  const votesNeeded = quotientGapNeeded * (firstNonSeat.seats + 1);
-  
-  return {
-    possible: true,
-    lastSeatParty: lastSeat.party,
-    challengerParty: firstNonSeat.party,
-    votesNeeded: votesNeeded,
-    percentageNeeded: votesNeeded / 100, // Convert to percentage points
-    quotientGap: quotientGapNeeded
-  };
 }
 
 /**
@@ -299,9 +511,21 @@ function calculateElectionMetrics(seatTotals, votePercentages, constituencyResul
     metrics.seatShare
   );
   
-  // Find viable coalitions if no party has overall majority
-  if (!metrics.hasOverallMajority) {
+  // Find viable coalitions using enhanced coalition theory models
+  // We'll do this even if a party has an overall majority,
+  // as it's still interesting to see the theoretical possibilities
+  try {
+    // Import the enhanced coalition utility functions
+    const { findViableCoalitions } = require('./coalitionUtils');
     metrics.possibleCoalitions = findViableCoalitions(
+      seatTotals, 
+      metrics.majorityThreshold
+    );
+  } catch (error) {
+    console.error("Error using enhanced coalition utilities:", error);
+    // Fall back to the original implementation
+    const { findViableCoalitions: legacyCoalitionFinder } = require('./simulationUtils');
+    metrics.possibleCoalitions = legacyCoalitionFinder(
       seatTotals, 
       metrics.majorityThreshold
     );
@@ -315,5 +539,6 @@ export {
   calculateAllConstituencies,
   calculateElectionMetrics,
   getRegionForConstituency,
-  calculateVotesNeededToChange
+  calculateVotesNeededToChange,
+  combineConstituencyVotes // Export the fixed version
 };

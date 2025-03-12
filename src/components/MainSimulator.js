@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PartyInputForm from './PartyInputForm';
 import ResultsDisplay from './ResultsDisplay';
-import ConstituencyManager from './ConstituencyManager';
 import { calculateElectionResults } from '../utils/simulationEngine';
 import { baselineNationalVotes } from '../data/baselineVotes';
 import constituencyPairingsData from '../data/constituencyPairings';
@@ -17,8 +16,8 @@ function MainSimulator() {
     'PlaidCymru': 22.4,
     'LibDems': 4.2,
     'Greens': 3.6,
-    'Reform': 1.1,
-    'Other': 5.2  // Includes former Abolish votes
+    'Reform': 4.1,
+    'Other': 2.2  // Includes former Abolish votes
   });
   
   // State to store constituency pairings
@@ -41,22 +40,62 @@ function MainSimulator() {
   
   // State to force recalculation
   const [forceUpdate, setForceUpdate] = useState(0);
+
+  // State to track errors
+  const [error, setError] = useState(null);
   
   // Load initial constituency pairings from data file
   useEffect(() => {
-    setConstituencyPairings([...constituencyPairingsData]);
-    setIsInitialized(true);
+    console.log("Loading constituency pairings data...");
+    
+    try {
+      // Extract pairings from the new data format
+      if (Array.isArray(constituencyPairingsData) && constituencyPairingsData.length > 0) {
+        // Check if it's the new format with ukConstituencies property
+        if (constituencyPairingsData[0].ukConstituencies) {
+          const pairings = constituencyPairingsData.map(item => item.ukConstituencies);
+          console.log("Created pairings from new format:", pairings);
+          setConstituencyPairings(pairings);
+        } 
+        // Check if it's the old format (array of arrays)
+        else if (Array.isArray(constituencyPairingsData[0])) {
+          console.log("Using existing pairings array:", constituencyPairingsData);
+          setConstituencyPairings(constituencyPairingsData);
+        } else {
+          throw new Error("Unrecognized constituency pairings format");
+        }
+      } else {
+        throw new Error("No valid constituency pairings data found");
+      }
+      
+      setIsInitialized(true);
+    } catch (err) {
+      console.error("Error setting constituency pairings:", err);
+      setError("Failed to initialize constituency data: " + err.message);
+    }
   }, []);
   
   // Calculate results when party votes, constituency pairings, or simulation options change
   useEffect(() => {
     // Skip if not initialized yet
-    if (!isInitialized || constituencyPairings.length === 0) {
+    if (!isInitialized || !constituencyPairings || constituencyPairings.length === 0) {
+      console.log("Skipping calculation - not initialized yet:", { 
+        isInitialized, 
+        hasPairings: Boolean(constituencyPairings),
+        pairingsLength: constituencyPairings?.length || 0
+      });
       return;
     }
     
     // Start calculation
     setIsCalculating(true);
+    setError(null);
+    
+    console.log("Starting calculation with:", {
+      partyVotes,
+      constituencyPairings: constituencyPairings.slice(0, 2), // Log just the first two for brevity
+      simulationOptions
+    });
     
     // Use setTimeout to ensure UI is responsive during calculation
     const timeoutId = setTimeout(() => {
@@ -73,7 +112,7 @@ function MainSimulator() {
         console.log("Calculation complete:", newResults);
       } catch (error) {
         console.error("Error calculating results:", error);
-        // You could set an error state here and show to the user
+        setError(`Calculation error: ${error.message}`);
       } finally {
         setIsCalculating(false);
       }
@@ -82,9 +121,12 @@ function MainSimulator() {
     // Cleanup timeout if component unmounts or dependencies change
     return () => clearTimeout(timeoutId);
   }, [partyVotes, constituencyPairings, simulationOptions, isInitialized, forceUpdate]);
+
   
   // Handle form submission with new vote percentages and options
   const handleVoteSubmit = (newVotes, options = {}) => {
+    console.log("Submitting new votes:", newVotes, options);
+    
     // Create completely new objects to ensure React detects the change
     const updatedVotes = { ...newVotes };
     const updatedOptions = { ...options };
@@ -95,16 +137,9 @@ function MainSimulator() {
     
     // Force a recalculation
     setForceUpdate(prev => prev + 1);
+    console.log("Force update triggered:", forceUpdate + 1);
   };
-  
-  // Handle saving of new constituency pairings
-  const handleSavePairings = (newPairings) => {
-    setConstituencyPairings([...newPairings]);
-    
-    // Force a recalculation
-    setForceUpdate(prev => prev + 1);
-  };
-  
+
   return (
     <div className="main-simulator">
       <div className="grid">
@@ -116,13 +151,6 @@ function MainSimulator() {
             onSubmit={handleVoteSubmit} 
             currentSimulationOptions={simulationOptions}
           />
-          
-          <div className="constituency-management">
-            <ConstituencyManager 
-              pairings={constituencyPairings}
-              onSavePairings={handleSavePairings}
-            />
-          </div>
           
           <div className="baseline-info">
             <p>
@@ -136,6 +164,25 @@ function MainSimulator() {
         
         {/* Right column with results */}
         <div className="results-section">
+          {error && (
+            <div className="card error-message">
+              <h3>Error</h3>
+              <p>{error}</p>
+              <details>
+                <summary>Debug Information</summary>
+                <pre>{JSON.stringify({
+                  isInitialized,
+                  pairings: constituencyPairings ? 
+                    (constituencyPairings.length > 0 ? 
+                      constituencyPairings.slice(0, 2) : 
+                      "Empty array") : 
+                    "No pairings",
+                  parties: Object.keys(partyVotes)
+                }, null, 2)}</pre>
+              </details>
+            </div>
+          )}
+          
           {isCalculating ? (
             <div className="card loading-message">
               <h3>Calculating results...</h3>

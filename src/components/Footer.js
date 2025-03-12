@@ -4,7 +4,7 @@ function Footer() {
   return (
     <footer className="app-footer">
       <p>Created by Jac M. Larner</p>
-      <p>© {new Date().getFullYear()} - Cardiff University</p>
+      <p>© {new Date().getFullYear()} - Jac M. Larner</p>
     </footer>
   );
 }

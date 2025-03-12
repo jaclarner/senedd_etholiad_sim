@@ -264,6 +264,7 @@ export function calculateEffectiveNumberOfParties(shares) {
 
 /**
  * Find viable coalition combinations that could form a government
+ * This is the legacy implementation, maintained for backward compatibility
  * @param {Object} seatTotals - Seat totals by party
  * @param {Number} majorityThreshold - Seats needed for a majority
  * @returns {Array} Array of viable coalitions
@@ -272,53 +273,197 @@ export function findViableCoalitions(seatTotals, majorityThreshold) {
   const parties = Object.keys(seatTotals).filter(party => seatTotals[party] > 0);
   const coalitions = [];
   
+  // First check if any single party has a majority
+  for (const party of parties) {
+    if (seatTotals[party] >= majorityThreshold) {
+      coalitions.push({
+        parties: [party],
+        seats: seatTotals[party],
+        majority: seatTotals[party] - majorityThreshold + 1,
+        partySeatCounts: { [party]: seatTotals[party] },
+        // Add estimated compatibility for backward compatibility
+        compatibility: { 
+          averageCompatibility: 10,
+          minimumCompatibility: 10,
+          ideologicalRange: 0,
+          isConnected: true
+        },
+        coalitionType: "Single Party Government",
+        isMinimalConnected: true,
+        isMinimumWinning: true,
+        isOversized: false,
+        isGrandCoalition: false,
+        excessSeats: seatTotals[party] - majorityThreshold
+      });
+    }
+  }
+  
   // Check all 2-party coalitions
   for (let i = 0; i < parties.length; i++) {
     for (let j = i + 1; j < parties.length; j++) {
-      const coalition = [parties[i], parties[j]];
-      const totalCoalitionSeats = seatTotals[parties[i]] + seatTotals[parties[j]];
+      const party1 = parties[i];
+      const party2 = parties[j];
+      const totalCoalitionSeats = seatTotals[party1] + seatTotals[party2];
       
       if (totalCoalitionSeats >= majorityThreshold) {
+        // Estimate compatibility based on party names
+        // This is a simplified version of the more detailed approach in coalitionUtils.js
+        let estimatedCompatibility = 0;
+        
+        // Basic political positioning (for backward compatibility)
+        const leftParties = ['Labour', 'PlaidCymru', 'Greens'];
+        const centristParties = ['LibDems'];
+        const rightParties = ['Conservatives', 'Reform'];
+        
+        const isParty1Left = leftParties.includes(party1);
+        const isParty1Centrist = centristParties.includes(party1);
+        const isParty1Right = rightParties.includes(party1);
+        
+        const isParty2Left = leftParties.includes(party2);
+        const isParty2Centrist = centristParties.includes(party2);
+        const isParty2Right = rightParties.includes(party2);
+        
+        // If both on same side, higher compatibility
+        if ((isParty1Left && isParty2Left) || 
+            (isParty1Right && isParty2Right)) {
+          estimatedCompatibility = 5;
+        } 
+        // If one centrist and one left/right, moderate compatibility
+        else if ((isParty1Centrist && (isParty2Left || isParty2Right)) ||
+                 (isParty2Centrist && (isParty1Left || isParty1Right))) {
+          estimatedCompatibility = 2;
+        }
+        // If left and right, low compatibility
+        else if ((isParty1Left && isParty2Right) || (isParty1Right && isParty2Left)) {
+          estimatedCompatibility = -5;
+        }
+        // Default compatibility
+        else {
+          estimatedCompatibility = 0;
+        }
+        
+        // Add the coalition with estimated political compatibility
         coalitions.push({
-          parties: coalition,
+          parties: [party1, party2],
           seats: totalCoalitionSeats,
           majority: totalCoalitionSeats - majorityThreshold + 1,
           partySeatCounts: {
-            [parties[i]]: seatTotals[parties[i]],
-            [parties[j]]: seatTotals[parties[j]]
-          }
+            [party1]: seatTotals[party1],
+            [party2]: seatTotals[party2]
+          },
+          compatibility: {
+            averageCompatibility: estimatedCompatibility,
+            minimumCompatibility: estimatedCompatibility,
+            ideologicalRange: Math.abs(estimatedCompatibility - 10) / 2,
+            isConnected: estimatedCompatibility > -3
+          },
+          coalitionType: estimatedCompatibility > 2 ? "Minimal Connected Winning" : 
+                        estimatedCompatibility > -3 ? "Practical Coalition" : 
+                        "Ideologically Disconnected",
+          isMinimalConnected: estimatedCompatibility > 2,
+          isMinimumWinning: totalCoalitionSeats - majorityThreshold < 3,
+          isOversized: totalCoalitionSeats - majorityThreshold >= 5,
+          isGrandCoalition: (party1 === 'Labour' && party2 === 'Conservatives') || 
+                           (party1 === 'Conservatives' && party2 === 'Labour'),
+          excessSeats: totalCoalitionSeats - majorityThreshold
         });
       }
     }
   }
   
-  // Check all 3-party coalitions if needed
-  if (coalitions.length < 3) {
-    for (let i = 0; i < parties.length; i++) {
-      for (let j = i + 1; j < parties.length; j++) {
-        for (let k = j + 1; k < parties.length; k++) {
-          const coalition = [parties[i], parties[j], parties[k]];
-          const totalCoalitionSeats = seatTotals[parties[i]] + seatTotals[parties[j]] + seatTotals[parties[k]];
+  // Check all 3-party coalitions
+  for (let i = 0; i < parties.length; i++) {
+    for (let j = i + 1; j < parties.length; j++) {
+      for (let k = j + 1; k < parties.length; k++) {
+        const party1 = parties[i];
+        const party2 = parties[j];
+        const party3 = parties[k];
+        const totalCoalitionSeats = seatTotals[party1] + seatTotals[party2] + seatTotals[party3];
+        
+        if (totalCoalitionSeats >= majorityThreshold) {
+          // Simplified estimation of compatibility for 3-party coalitions
+          // Estimate based on general left-right positioning
+          const leftParties = ['Labour', 'PlaidCymru', 'Greens'];
+          const centristParties = ['LibDems'];
+          const rightParties = ['Conservatives', 'Reform'];
           
-          if (totalCoalitionSeats >= majorityThreshold) {
-            coalitions.push({
-              parties: coalition,
-              seats: totalCoalitionSeats,
-              majority: totalCoalitionSeats - majorityThreshold + 1,
-              partySeatCounts: {
-                [parties[i]]: seatTotals[parties[i]],
-                [parties[j]]: seatTotals[parties[j]],
-                [parties[k]]: seatTotals[parties[k]]
-              }
-            });
+          const leftCount = [party1, party2, party3].filter(p => leftParties.includes(p)).length;
+          const rightCount = [party1, party2, party3].filter(p => rightParties.includes(p)).length;
+          
+          let estimatedCompatibility;
+          let isConnected = true;
+          
+          // All from same bloc (left or right)
+          if (leftCount === 3 || rightCount === 3) {
+            estimatedCompatibility = 5;
           }
+          // Two from same bloc plus a centrist
+          else if ((leftCount === 2 && [party1, party2, party3].some(p => centristParties.includes(p))) ||
+                  (rightCount === 2 && [party1, party2, party3].some(p => centristParties.includes(p)))) {
+            estimatedCompatibility = 3;
+          }
+          // Mixed left-right with centrist bridge
+          else if (leftCount === 1 && rightCount === 1 && [party1, party2, party3].some(p => centristParties.includes(p))) {
+            estimatedCompatibility = 0;
+          }
+          // Direct left-right coalition (ideologically disconnected)
+          else if (leftCount > 0 && rightCount > 0) {
+            estimatedCompatibility = -3;
+            isConnected = false;
+          }
+          // Default
+          else {
+            estimatedCompatibility = 1;
+          }
+          
+          // Add to coalitions with compatibility estimate
+          coalitions.push({
+            parties: [party1, party2, party3],
+            seats: totalCoalitionSeats,
+            majority: totalCoalitionSeats - majorityThreshold + 1,
+            partySeatCounts: {
+              [party1]: seatTotals[party1],
+              [party2]: seatTotals[party2],
+              [party3]: seatTotals[party3]
+            },
+            compatibility: {
+              averageCompatibility: estimatedCompatibility,
+              minimumCompatibility: estimatedCompatibility - 2,
+              ideologicalRange: Math.abs(estimatedCompatibility - 10) / 2,
+              isConnected: isConnected
+            },
+            coalitionType: isConnected ? 
+                        (totalCoalitionSeats - majorityThreshold < 3 ? "Minimum Winning Coalition" : "Oversized Coalition") : 
+                        "Ideologically Disconnected",
+            isMinimalConnected: isConnected && totalCoalitionSeats - majorityThreshold < 5,
+            isMinimumWinning: totalCoalitionSeats - majorityThreshold < 3,
+            isOversized: totalCoalitionSeats - majorityThreshold >= 5,
+            isGrandCoalition: (leftCount > 0 && rightCount > 0),
+            excessSeats: totalCoalitionSeats - majorityThreshold
+          });
         }
       }
     }
   }
   
-  // Sort coalitions by number of seats (descending)
-  coalitions.sort((a, b) => b.seats - a.seats);
+  // Sort coalitions:
+  // 1. First by estimated compatibility (higher is better)
+  // 2. Then by number of parties (fewer is better)
+  // 3. Finally by total seats (more seats = more stable)
+  coalitions.sort((a, b) => {
+    // First by compatibility
+    if (a.compatibility.averageCompatibility !== b.compatibility.averageCompatibility) {
+      return b.compatibility.averageCompatibility - a.compatibility.averageCompatibility;
+    }
+    
+    // Then by number of parties (fewer is better)
+    if (a.parties.length !== b.parties.length) {
+      return a.parties.length - b.parties.length;
+    }
+    
+    // Finally by seats
+    return b.seats - a.seats;
+  });
   
   return coalitions;
 }
