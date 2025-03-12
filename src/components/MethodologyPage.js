@@ -46,10 +46,11 @@ function MethodologyPage() {
           <li>Welsh Election Study data</li>
           <li>Boundary Commission data on the new constituency boundaries</li>
           <li>Statistical modeling to estimate vote share in the new boundaries</li>
+          <li>Extra assumptions (like adding together 2021 Reform and Abolish estimates) to create more realistic seat totals.</li>
         </ul>
         <p>
           These estimates represent our best approximation of how the 2021 votes would have translated
-          to the new boundaries, but they are estimations rather than precise figures.
+          to the new boundaries, but they are estimations rather than precise figures and <strong>should not be taken as notional results!</strong>
         </p>
         
         <h3>Swing Calculation Models</h3>
@@ -66,7 +67,7 @@ function MethodologyPage() {
           <dt>Proportional Swing</dt>
           <dd>
             Changes each party's vote share proportionally to their starting position in each constituency.
-            This reflects that parties often gain or lose more votes in areas where they're already strong.
+            This reflects that parties often gain or lose more votes in areas where they're already strong. However is very sensitive to large swings or new parties (see Reform).
           </dd>
           
           <dt>Regional Variation</dt>
@@ -92,7 +93,7 @@ function MethodologyPage() {
           </li>
           <li>
             <strong>Turnout assumptions:</strong> The simulator assumes consistent turnout across constituencies
-            and doesn't model differential turnout effects.
+            and doesn't model differential turnout effects. We know this is not what actually happens in real elections.
           </li>
           <li>
             <strong>No tactical voting:</strong> The simulator doesn't account for tactical voting behavior

@@ -30,8 +30,9 @@ function AboutPage() {
             results would have looked like under the new electoral system and boundaries.
           </li>
           <li>
-            It assumes a uniform swing across all constituencies, which may not be the case 
-            in a real election.
+            Standard model assumes a uniform swing across all constituencies, which may not be the case 
+            in a real election. You can swap to proportional swing, but this has its own problems particularly
+            when dealing with large swings in vote intention.
           </li>
           <li>
             The tool does not account for tactical voting or local factors that might influence 

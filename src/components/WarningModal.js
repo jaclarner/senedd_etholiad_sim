@@ -28,7 +28,8 @@ function WarningModal({ isOpen, onClose, onConfirm }) {
         
         <div className="modal-body">
           <p className="warning-intro">
-            Please note that this simulator is designed as an <strong>educational tool</strong>, not a predictive model.
+            Please note that this simulator is designed as an <strong>educational tool</strong>, not a predictive model. It makes several assumptions about 2021 vote share (see methodology)
+            and should <strong>not</strong> be used to predict election outcomes.
           </p>
           
           <div className="warning-details">
@@ -40,7 +41,7 @@ function WarningModal({ isOpen, onClose, onConfirm }) {
               </li>
               <li>
                 <strong>Baseline data:</strong> Vote patterns are based on estimates from past elections adapted 
-                to new boundaries, which may not reflect current political sentiment.
+                to new boundaries, and will <strong>contain errors</strong>.
               </li>
               <li>
                 <strong>Uniform changes:</strong> The default model applies changes uniformly across constituencies, 
@@ -49,6 +50,11 @@ function WarningModal({ isOpen, onClose, onConfirm }) {
               <li>
                 <strong>No demographic modeling:</strong> The simulator doesn't account for demographic shifts 
                 or differential turnout.
+              </li>
+              <li>
+                <strong>Reform vote:</strong> Reform's baseline vote from 2021 is the combination of Reform UK estimates + Abolish estimates. This is a simple way of stopping 
+                extreme results when using swing models (a common problem when dealing with new popular parties). WES data shows this transfere of voters is a reasonable assumptions
+                but it will <strong> still contain errors</strong> .
               </li>
             </ul>
             
