@@ -1083,6 +1083,7 @@ body {
   width: 150px;
   font-weight: 500;
   flex-shrink: 0;
+  color: black;
 }
 
 .input-container {
@@ -1349,4 +1350,17 @@ body {
   font-size: 0.8125rem;
   color: var(--text-light);
   font-style: italic;
+}
+
+.input-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-right: 40px;
+}
+
+
+.party-inputs .input-group .party-label {
+  color: black !important;
 }

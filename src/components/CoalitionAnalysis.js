@@ -1,9 +1,9 @@
 import React from 'react';
 import { formatDecimal, formatPartyName, getPartyColor } from '../utils/formatting';
-import { getPartyCompatibility, partyIdeology } from '../utils/coalitionUtils';
+import { getPartyCompatibility, partyIdeology, ideologicalBlocs } from '../utils/coalitionUtils';
 
 /**
- * Component to display detailed analysis of a selected coalition
+ * Simplified component to display coalition analysis focused on ideological groupings
  * @param {Object} props
  * @param {Object} props.coalition - Selected coalition object
  * @param {Object} props.seatTotals - Total seats by party
@@ -19,193 +19,123 @@ function CoalitionAnalysis({ coalition, seatTotals, majorityThreshold }) {
     (a, b) => coalition.partySeatCounts[b] - coalition.partySeatCounts[a]
   );
   
-  // Calculate party pair compatibility scores
-  const partyPairs = [];
-  for (let i = 0; i < sortedParties.length; i++) {
-    for (let j = i + 1; j < sortedParties.length; j++) {
-      const party1 = sortedParties[i];
-      const party2 = sortedParties[j];
-      const compatibility = getPartyCompatibility(party1, party2);
-      
-      partyPairs.push({
-        party1,
-        party2,
-        compatibility
-      });
-    }
+  // Determine which ideological bloc this coalition represents
+  const hasLeftParty = sortedParties.some(party => 
+    ideologicalBlocs['Left Bloc'] && ideologicalBlocs['Left Bloc'].includes(party)
+  );
+  const hasRightParty = sortedParties.some(party => 
+    ideologicalBlocs['Right Bloc'] && ideologicalBlocs['Right Bloc'].includes(party)
+  );
+  
+  let blocType = "";
+  if (hasLeftParty && !hasRightParty) {
+    blocType = "Left-wing";
+  } else if (hasRightParty && !hasLeftParty) {
+    blocType = "Right-wing";
+  } else if (hasLeftParty && hasRightParty) {
+    blocType = "Cross-bloc";
+  } else {
+    blocType = "Centrist";
   }
   
-  // Determine coalition type characteristics
-  const isMinimalConnected = coalition.isMinimalConnected;
-  const isMinimumWinning = coalition.isMinimumWinning;
-  const isOversized = coalition.isOversized;
-  const isIdeologicallyCoherent = coalition.compatibility.ideologicalRange < 3;
-  
-  // Get the theoretical name for this coalition
-  const getTheoreticalCoalitionName = () => {
-    if (sortedParties.length === 1) {
-      return "Single Party Government";
-    } else if (isMinimalConnected && isMinimumWinning) {
-      return "Minimum Connected Winning Coalition (Axelrod/Riker)";
-    } else if (isMinimalConnected) {
-      return "Minimal Connected Winning Coalition (Axelrod)";
-    } else if (isMinimumWinning) {
-      return "Minimum Winning Coalition (Riker)";
-    } else if (isOversized) {
-      return "Oversized Coalition";
-    } else {
-      return "Practical Coalition";
-    }
+  // Get color for compatibility indicator
+  const getCompatibilityColor = (compatibility) => {
+    if (compatibility > 5) return '#4ade80'; // Green
+    if (compatibility > 0) return '#facc15'; // Yellow
+    return '#f87171'; // Red
   };
   
   return (
     <div className="coalition-analysis">
       <h3 className="analysis-title">
-        Coalition Analysis: {sortedParties.map(formatPartyName).join(' + ')}
+        {coalition.coalitionType}: {sortedParties.map(formatPartyName).join(' + ')}
       </h3>
       
-      <div className="coalition-theory-classification">
-        <h4>Theoretical Classification</h4>
-        <div className="theory-classification">
-          <p className="coalition-type">{getTheoreticalCoalitionName()}</p>
-          
-          <div className="theory-properties">
-            <div className="property">
-              <span className="property-name">Minimal Connected:</span>
-              <span className={`property-value ${isMinimalConnected ? 'positive' : 'negative'}`}>
-                {isMinimalConnected ? 'Yes' : 'No'}
-              </span>
-            </div>
-            
-            <div className="property">
-              <span className="property-name">Minimum Winning:</span>
-              <span className={`property-value ${isMinimumWinning ? 'positive' : 'negative'}`}>
-                {isMinimumWinning ? 'Yes' : 'No'}
-              </span>
-            </div>
-            
-            <div className="property">
-              <span className="property-name">Ideologically Coherent:</span>
-              <span className={`property-value ${isIdeologicallyCoherent ? 'positive' : 'negative'}`}>
-                {isIdeologicallyCoherent ? 'Yes' : 'No'}
-              </span>
-            </div>
-            
-            <div className="property">
-              <span className="property-name">Excess Seats:</span>
-              <span className="property-value">
-                {coalition.excessSeats} over majority
-              </span>
-            </div>
+      <div className="coalition-overview">
+        <div className="coalition-stats">
+          <div className="stat-item">
+            <span className="stat-label">Total Seats:</span>
+            <span className="stat-value">{coalition.seats}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Majority Margin:</span>
+            <span className="stat-value">{coalition.majority} seats</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Ideological Type:</span>
+            <span className="stat-value">{blocType} Coalition</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Compatibility:</span>
+            <span className="stat-value" style={{ 
+              color: getCompatibilityColor(coalition.compatibility.averageCompatibility) 
+            }}>
+              {coalition.compatibility.averageCompatibility > 5 ? 'High' : 
+               coalition.compatibility.averageCompatibility > 0 ? 'Moderate' : 'Low'}
+            </span>
           </div>
         </div>
       </div>
       
-      <div className="coalition-compatibility">
+      {/* Ideological spectrum visualization */}
+      <div className="ideology-spectrum">
         <h4>Ideological Positioning</h4>
-        
-        {/* Ideological spectrum visualization */}
-        <div className="ideology-spectrum">
-          <div className="spectrum-scale">
-            <span className="scale-label left">Left</span>
-            <span className="scale-label center">Center</span>
-            <span className="scale-label right">Right</span>
-          </div>
-          
-          <div className="spectrum-track">
-            {sortedParties.map(party => (
-              <div 
-                key={`ideology-${party}`}
-                className="party-position"
-                style={{
-                  left: `${(partyIdeology[party] / 10) * 100}%`,
-                  backgroundColor: getPartyColor(party)
-                }}
-                title={`${formatPartyName(party)}: ${partyIdeology[party]}`}
-              >
-                <span className="party-label">{formatPartyName(party).charAt(0)}</span>
-              </div>
-            ))}
-          </div>
+        <div className="spectrum-scale">
+          <span className="scale-label left">Left</span>
+          <span className="scale-label center">Center</span>
+          <span className="scale-label right">Right</span>
         </div>
         
-        {/* Party pair compatibility table */}
-        <div className="party-compatibility">
-          <h4>Party Pair Compatibility</h4>
-          <div className="compatibility-pairs">
-            {partyPairs.map((pair, index) => (
-              <div 
-                key={`pair-${index}`} 
-                className={`compatibility-pair ${
-                  pair.compatibility > 2 ? 'high-compatibility' :
-                  pair.compatibility > 0 ? 'medium-compatibility' : 'low-compatibility'
-                }`}
-              >
-                <div className="pair-parties">
-                  <span 
-                    className="pair-party" 
-                    style={{ backgroundColor: getPartyColor(pair.party1) }}
-                  >
-                    {formatPartyName(pair.party1)}
-                  </span>
-                  <span className="pair-connector">+</span>
-                  <span 
-                    className="pair-party"
-                    style={{ backgroundColor: getPartyColor(pair.party2) }}
-                  >
-                    {formatPartyName(pair.party2)}
-                  </span>
-                </div>
-                <div className="pair-score">
-                  <div className="score-bar-container">
-                    <div 
-                      className="score-bar"
-                      style={{ 
-                        width: `${Math.max(0, ((pair.compatibility + 10) / 20) * 100)}%`,
-                        backgroundColor: pair.compatibility > 2 ? '#4ade80' : 
-                                        pair.compatibility > 0 ? '#facc15' : '#f87171'
-                      }}
-                    ></div>
-                  </div>
-                  <span className="score-value">{formatDecimal(pair.compatibility, 1)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="spectrum-track">
+          {sortedParties.map(party => (
+            <div 
+              key={`ideology-${party}`}
+              className="party-position"
+              style={{
+                left: `${(partyIdeology[party] / 10) * 100}%`,
+                backgroundColor: getPartyColor(party)
+              }}
+              title={`${formatPartyName(party)}: ${partyIdeology[party]}`}
+            >
+              <span className="party-label">{formatPartyName(party).charAt(0)}</span>
+            </div>
+          ))}
         </div>
       </div>
       
-      <div className="coalition-power-distribution">
-        <h4>Power Distribution</h4>
+      {/* Seat distribution */}
+      <div className="seat-distribution">
+        <h4>Seat Distribution</h4>
+        <div className="coalition-bar">
+          {sortedParties.map(party => (
+            <div 
+              key={`bar-${party}`}
+              className="party-segment"
+              style={{
+                width: `${(coalition.partySeatCounts[party] / coalition.seats) * 100}%`,
+                backgroundColor: getPartyColor(party)
+              }}
+              title={`${formatPartyName(party)}: ${coalition.partySeatCounts[party]} seats`}
+            ></div>
+          ))}
+        </div>
         
-        {/* Seat and power distribution */}
-        <div className="power-table">
-          <div className="power-header">
-            <div className="power-cell">Party</div>
-            <div className="power-cell">Seats</div>
-            <div className="power-cell">% of Coalition</div>
-            <div className="power-cell">% of Senedd</div>
-          </div>
-          
+        <div className="seat-distribution-table">
           {sortedParties.map(party => {
             const partySeats = coalition.partySeatCounts[party];
             const percentOfCoalition = (partySeats / coalition.seats) * 100;
-            const percentOfSenedd = (partySeats / Object.values(seatTotals).reduce((a, b) => a + b, 0)) * 100;
             
             return (
-              <div key={`power-${party}`} className="power-row">
+              <div key={`dist-${party}`} className="seat-row">
                 <div 
-                  className="power-cell party"
+                  className="party-name"
                   style={{ borderLeftColor: getPartyColor(party) }}
                 >
                   {formatPartyName(party)}
                 </div>
-                <div className="power-cell seats">{partySeats}</div>
-                <div className="power-cell percent-coalition">
+                <div className="party-seats">{partySeats} seats</div>
+                <div className="party-percent">
                   {formatDecimal(percentOfCoalition, 1)}%
-                </div>
-                <div className="power-cell percent-senedd">
-                  {formatDecimal(percentOfSenedd, 1)}%
                 </div>
               </div>
             );
@@ -213,39 +143,49 @@ function CoalitionAnalysis({ coalition, seatTotals, majorityThreshold }) {
         </div>
       </div>
       
+      {/* Analysis notes */}
       <div className="coalition-notes">
-        <h4>Analysis Notes</h4>
-        <p>
-          {isMinimalConnected ? (
-            <span>
-              This coalition follows Axelrod's minimal connected winning theory, consisting of 
-              ideologically adjacent parties with no unnecessary members.
-            </span>
-          ) : isMinimumWinning ? (
-            <span>
-              This coalition follows Riker's minimum winning coalition theory, representing the 
-              smallest possible majority, but includes some ideological diversity.
-            </span>
-          ) : isOversized ? (
-            <span>
-              This oversized coalition includes more parties than necessary for a majority, 
-              which contradicts both Axelrod's and Riker's theories but may provide greater stability.
-            </span>
-          ) : (
-            <span>
-              This coalition balances practical considerations with ideological compatibility,
-              and represents a workable compromise.
-            </span>
-          )}
-        </p>
+        <h4>Coalition Analysis</h4>
+        
+        {blocType === "Left-wing" && (
+          <p>
+            This is a left-wing coalition combining parties from the progressive side of Welsh politics.
+            {sortedParties.includes('Labour') && sortedParties.includes('PlaidCymru') && 
+              " Labour and Plaid Cymru have worked together in the past, with varying levels of formality."}
+            {sortedParties.includes('LibDems') && 
+              " The Liberal Democrats can provide additional support, though they typically maintain some independence."}
+          </p>
+        )}
+        
+        {blocType === "Right-wing" && (
+          <p>
+            This is a right-of-center coalition. 
+            {sortedParties.includes('Conservatives') && sortedParties.includes('Reform') && 
+              " The Conservatives and Reform UK represent different aspects of right-wing politics, with Reform taking more populist positions."}
+            {sortedParties.includes('LibDems') && 
+              " The Liberal Democrats can sometimes work with center-right parties on economic issues, though with significant policy differences on other matters."}
+          </p>
+        )}
+        
+        {blocType === "Cross-bloc" && (
+          <p>
+            This cross-bloc coalition would be unusual in Welsh politics, requiring significant compromise between parties with different ideological positions. Such arrangements are more typical during periods of political instability or deadlock.
+            {sortedParties.includes('LibDems') && 
+              " The Liberal Democrats could potentially act as a bridge between the different ideological camps."}
+          </p>
+        )}
+        
+        {blocType === "Centrist" && (
+          <p>
+            This centrist coalition would focus on moderate policies, likely emphasizing pragmatic governance over strong ideological positions.
+          </p>
+        )}
         
         <p>
-          Overall compatibility: {
-            coalition.compatibility.averageCompatibility > 5 ? 'Very High' :
-            coalition.compatibility.averageCompatibility > 2 ? 'High' :
-            coalition.compatibility.averageCompatibility > 0 ? 'Moderate' :
-            coalition.compatibility.averageCompatibility > -2 ? 'Low' : 'Very Low'
-          } ({formatDecimal(coalition.compatibility.averageCompatibility, 1)})
+          With a majority of {coalition.majority} seats, this coalition would 
+          {coalition.majority > 5 ? ' have a comfortable working margin' : 
+           coalition.majority > 2 ? ' have a workable but modest majority' : 
+           ' need to maintain strong party discipline due to its narrow majority'}.
         </p>
       </div>
     </div>

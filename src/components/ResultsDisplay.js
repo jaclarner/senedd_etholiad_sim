@@ -157,117 +157,124 @@ function ResultsDisplay({ results }) {
       </section>
       
       {/* Enhanced coalition analysis section */}
-      {!metrics.hasOverallMajority && metrics.possibleCoalitions && metrics.possibleCoalitions.length > 0 && (
-        <section className="card result-section">
-          <h2 className="section-title">Government Formation Analysis</h2>
-          
-          {/* Coalition theory explanation */}
-          <div className="coalition-theory">
-            <p className="theory-intro">
-              Click on a coalition and scroll down to see more information. The coalition predictions below are based on established political science theories:
-            </p>
+{!metrics.hasOverallMajority && metrics.possibleCoalitions && metrics.possibleCoalitions.length > 0 && (
+  <section className="card result-section">
+    <h2 className="section-title">Potential Governing Arrangements</h2>
+    
+    {/* Simplified coalition explanation */}
+    <div className="coalition-theory">
+      <p className="theory-intro">
+        While the Senedd uses a proportional system, most democracies form governments based on ideological compatibility. 
+        The below analysis shows potential coalitions based on ideological alignment.
+      </p>
+      
+      <div className="theory-details">
+        <div className="theory-item">
+          <h4>Welsh/Left-wing Group</h4>
+          <p>Combinations of Labour, Plaid Cymru, Greens, and potentially Liberal Democrats</p>
+        </div>
+        
+        <div className="theory-item">
+          <h4>British/Right-wing Group</h4>
+          <p>Combinations of Conservatives, Reform.</p>
+        </div>
+      </div>
+    </div>
+  
+    {/* List of theoretical coalition possibilities */}
+    <div className="coalitions-container">
+      {metrics.possibleCoalitions.slice(0, 5).map((coalition, index) => (
+        <div 
+          key={`coalition-${index}-${coalition.seats}`} 
+          className={`coalition-card ${selectedCoalition === index ? 'selected' : ''}`}
+          onClick={() => handleCoalitionSelect(index)}
+        >
+          <div className="coalition-header">
+            <div className="coalition-title">
+              <h4>{coalition.coalitionType}</h4>
+              <span className="coalition-seats">{coalition.seats} seats</span>
+            </div>
             
-            <div className="theory-details">
-              <div className="theory-item">
-                <h4>Minimal Connected Winning Coalitions (Axelrod)</h4>
-                <p>Coalitions that contain ideologically adjacent parties with no unnecessary members.</p>
-              </div>
-              
-              <div className="theory-item">
-                <h4>Minimum Winning Coalitions (Riker)</h4>
-                <p>The smallest possible coalition that achieves a majority, avoiding excess parties.</p>
-              </div>
+            {/* Coalition compatibility indicator */}
+            <div className="compatibility-indicator">
+              <span 
+                className={`compatibility-dot ${
+                  coalition.compatibility.averageCompatibility > 5 ? 'high' :
+                  coalition.compatibility.averageCompatibility > 0 ? 'medium' : 'low'
+                }`}
+                title={`Compatibility: ${formatDecimal(coalition.compatibility.averageCompatibility, 1)}`}
+              ></span>
             </div>
           </div>
-        
-          {/* List of theoretical coalition possibilities */}
-          <div className="coalitions-container">
-            {metrics.possibleCoalitions.slice(0, 5).map((coalition, index) => (
-              <div 
-                key={`coalition-${index}-${coalition.seats}`} 
-                className={`coalition-card ${selectedCoalition === index ? 'selected' : ''}`}
-                onClick={() => handleCoalitionSelect(index)}
-              >
-                <div className="coalition-header">
-                  <div className="coalition-title">
-                    <h4>{coalition.coalitionType}</h4>
-                    <span className="coalition-seats">{coalition.seats} seats</span>
-                  </div>
-                  
-                  {/* Coalition compatibility indicator */}
-                  <div className="compatibility-indicator">
-                    <span 
-                      className={`compatibility-dot ${
-                        coalition.compatibility.averageCompatibility > 2 ? 'high' :
-                        coalition.compatibility.averageCompatibility > 0 ? 'medium' : 'low'
-                      }`}
-                      title={`Compatibility: ${formatDecimal(coalition.compatibility.averageCompatibility, 1)}`}
-                    ></span>
-                  </div>
-                </div>
-                
-                <div className="coalition-parties">
-                  {coalition.parties.map(party => (
-                    <span key={`${index}-${party}`} className="coalition-party">
-                      {formatPartyName(party)}
-                      {coalition.parties.indexOf(party) < coalition.parties.length - 1 ? ' + ' : ''}
-                    </span>
-                  ))}
-                </div>
-                
-                <div className="coalition-bar">
-                  {coalition.parties.map(party => (
-                    <div 
-                      key={`bar-${index}-${party}`}
-                      className="party-segment"
-                      style={{
-                        width: `${(coalition.partySeatCounts[party] / coalition.seats) * 100}%`,
-                        backgroundColor: getPartyColor(party)
-                      }}
-                      title={`${formatPartyName(party)}: ${coalition.partySeatCounts[party]} seats`}
-                    ></div>
-                  ))}
-                </div>
-                
-                <div className="coalition-details">
-                  <div className="majority-info">
-                    <span className="label">Majority:</span>
-                    <span className="value">{coalition.majority} {coalition.majority === 1 ? 'seat' : 'seats'}</span>
-                  </div>
-                  
-                  <div className="ideology-info">
-                    <span className="label">Ideological Range:</span>
-                    <span className="value">{formatDecimal(coalition.compatibility.ideologicalRange, 1)} points</span>
-                  </div>
-                </div>
-              </div>
+          
+          <div className="coalition-parties">
+            {coalition.parties.map(party => (
+              <span key={`${index}-${party}`} className="coalition-party">
+                {formatPartyName(party)}
+                {coalition.parties.indexOf(party) < coalition.parties.length - 1 ? ' + ' : ''}
+              </span>
             ))}
           </div>
           
-          {/* Detailed analysis of selected coalition */}
-          {metrics.possibleCoalitions.length > 0 && (
-            <CoalitionAnalysis 
-              coalition={metrics.possibleCoalitions[selectedCoalition]}
-              seatTotals={nationalTotals}
-              majorityThreshold={metrics.majorityThreshold}
-            />
-          )}
-          
-          <div className="coalition-theory-notes">
-            <h4>Understanding Coalition Formation</h4>
-            <p>
-              Political science suggests that parties balance power-seeking (maximizing cabinet positions) with
-              policy objectives (minimizing ideological differences). According to these theories, the most likely 
-              coalitions are those with ideologically compatible parties that together have just enough seats 
-              to form a government.
-            </p>
-            <p>
-              Note: These predictions are based on theoretical models and don't account for all real-world factors 
-              such as personalities, specific policy negotiations, or historical precedents unique to Welsh politics.
-            </p>
+          <div className="coalition-bar">
+            {coalition.parties.map(party => (
+              <div 
+                key={`bar-${index}-${party}`}
+                className="party-segment"
+                style={{
+                  width: `${(coalition.partySeatCounts[party] / coalition.seats) * 100}%`,
+                  backgroundColor: getPartyColor(party)
+                }}
+                title={`${formatPartyName(party)}: ${coalition.partySeatCounts[party]} seats`}
+              ></div>
+            ))}
           </div>
-        </section>
-      )}
+          
+          <div className="coalition-details">
+            <div className="majority-info">
+              <span className="label">Majority:</span>
+              <span className="value">{coalition.majority} {coalition.majority === 1 ? 'seat' : 'seats'}</span>
+            </div>
+            
+            <div className="compatibility-info">
+              <span className="label">Compatibility:</span>
+              <span className="value">
+                {coalition.compatibility.averageCompatibility > 5 ? 'High' : 
+                 coalition.compatibility.averageCompatibility > 0 ? 'Moderate' : 'Low'}
+              </span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+    
+    {/* Detailed analysis of selected coalition */}
+    {metrics.possibleCoalitions.length > 0 && (
+      <CoalitionAnalysis 
+        coalition={metrics.possibleCoalitions[selectedCoalition]}
+        seatTotals={nationalTotals}
+        majorityThreshold={metrics.majorityThreshold}
+      />
+    )}
+    
+    <div className="coalition-theory-notes">
+      <h4>Understanding Welsh Coalition Politics</h4>
+      <p>
+        Wales has a history of parties working together formally in a coalition or via some other arrangement. 
+        Currently two main ideological blocs are generally:
+      </p>
+      <ul>
+        <li>A Welsh/Left Bloc: Labour and Plaid Cymru and sometimes Liberal Democrats and potentially Greens.</li>
+        <li>A British/Right Bloc: Conservatives and Reform UK.</li>
+      </ul>
+      <p>
+        The Liberal Democrats could potentially work with either bloc (though in recent years are much closer aligned to the Welsh/left bloc), while other cross-bloc arrangements 
+        are less common but not impossible in specific political circumstances.
+      </p>
+    </div>
+  </section>
+)}
+     
     </div>
   );
 }
