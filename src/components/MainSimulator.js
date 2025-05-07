@@ -145,7 +145,7 @@ function MainSimulator() {
       <div className="grid">
         {/* Left column with form inputs */}
         <div className="card input-section">
-          <h2>Enter National Vote Percentages</h2>
+          <h2>Enter National Vote Percentages or Select Preset Below</h2>
           <PartyInputForm 
             initialVotes={partyVotes} 
             onSubmit={handleVoteSubmit} 

@@ -12,7 +12,7 @@ function Header() {
 />
         <div>
           <h1>Senedd Election Simulator</h1>
-          <p>Created by Jac Larner</p>
+          <p>Created by Jac Larner, Wales Governance Centre, Cardiff University</p>
         </div>
       </div>
     </header>

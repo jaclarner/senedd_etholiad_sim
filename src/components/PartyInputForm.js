@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { formatDecimal, getPartyColor, formatPartyName } from '../utils/formatting';
 import { baselineNationalVotes } from '../data/baselineVotes';
+import PresetSelector from './PresetSelector';
 
 /**
  * Component for entering party vote percentages
@@ -12,6 +13,9 @@ import { baselineNationalVotes } from '../data/baselineVotes';
 function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} }) {
   // State to hold current vote percentages
   const [votes, setVotes] = useState({ ...initialVotes });
+  
+  // State to track currently selected preset
+  const [currentPreset, setCurrentPreset] = useState(null);
   
   // State to track total percentage
   const [totalPercentage, setTotalPercentage] = useState(100);
@@ -63,6 +67,20 @@ function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} 
       ...prevVotes,
       [party]: isNaN(numValue) ? 0 : numValue
     }));
+    
+    // If user manually changes values, clear current preset
+    setCurrentPreset(null);
+  };
+  
+  // Handle preset selection
+  const handlePresetSelect = (preset) => {
+    if (preset) {
+      setVotes({ ...preset.votes });
+      setCurrentPreset(preset);
+    } else {
+      // If preset is null, just clear the current preset but keep vote values
+      setCurrentPreset(null);
+    }
   };
 
   // Handle form submission
@@ -110,7 +128,9 @@ function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} 
           >
             <option value="uniform">Uniform National Swing</option>
             <option value="proportional">Proportional Swing</option>
+            {/* Regional option temporarily removed
             <option value="regional">Regional Variation</option>
+            */}
           </select>
           
           {/* Help text based on selected swing type */}
@@ -121,56 +141,59 @@ function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} 
             {swingType === 'proportional' && (
               <p>Proportional Swing applies changes proportionally to a party's baseline support in each constituency.</p>
             )}
+            {/* Regional swing explanation temporarily removed
             {swingType === 'regional' && (
               <p>Regional Variation allows you to specify different swings for different regions of Wales.</p>
             )}
+            */}
           </div>
           
-          {/* Regional swing configuration button - would be implemented in a future version */}
+          {/* Regional swing configuration section temporarily removed
           {swingType === 'regional' && (
             <div className="regional-notice">
-              <p><i>(Currently trying to ge this to work - check back soon!)</i></p>
+              <p><i>(Currently trying to get this to work - check back soon!)</i></p>
             </div>
           )}
+          */}
         </div>
         
         <div className="party-inputs">
-  {Object.keys(votes).map(party => (
-    <div key={party} className="input-group">
-      <label htmlFor={`input-${party}`} className="party-label">
-        {formatPartyName(party)}:
-      </label>
-      <div className="input-container">
-        <input
-          id={`input-${party}`}
-          type="number"
-          min="0"
-          max="100"
-          step="0.1"
-          value={votes[party]}
-          onChange={(e) => handleInputChange(party, e.target.value)}
-          className="party-input"
-        />
-        <div className="input-visualization">
-          <div 
-            className="vote-indicator"
-            style={{
-              width: `${votes[party]}%`,
-              backgroundColor: getPartyColor(party),
-              maxWidth: '100%'
-            }}
-          />
-          
-          {/* Show change from baseline */}
-          <div className={`vote-change ${votes[party] > baselineNationalVotes[party] ? 'positive' : votes[party] < baselineNationalVotes[party] ? 'negative' : ''}`}>
-            {votes[party] > baselineNationalVotes[party] ? '+' : ''}
-            {formatDecimal(votes[party] - baselineNationalVotes[party], 1)}
-          </div>
+          {Object.keys(votes).map(party => (
+            <div key={party} className="input-group">
+              <label htmlFor={`input-${party}`} className="party-label">
+                {formatPartyName(party)}:
+              </label>
+              <div className="input-container">
+                <input
+                  id={`input-${party}`}
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={votes[party]}
+                  onChange={(e) => handleInputChange(party, e.target.value)}
+                  className="party-input"
+                />
+                <div className="input-visualization">
+                  <div 
+                    className="vote-indicator"
+                    style={{
+                      width: `${votes[party]}%`,
+                      backgroundColor: getPartyColor(party),
+                      maxWidth: '100%'
+                    }}
+                  />
+                  
+                  {/* Show change from baseline */}
+                  <div className={`vote-change ${votes[party] > baselineNationalVotes[party] ? 'positive' : votes[party] < baselineNationalVotes[party] ? 'negative' : ''}`}>
+                    {votes[party] > baselineNationalVotes[party] ? '+' : ''}
+                    {formatDecimal(votes[party] - baselineNationalVotes[party], 1)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
-    </div>
-  ))}
-</div>
 
         <div className={`total-percentage ${!isValid ? 'invalid' : ''}`}>
           Total: {totalPercentage.toFixed(1)}%
@@ -184,6 +207,16 @@ function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} 
         >
           Calculate Results
         </button>
+        
+        {/* Preset Selector */}
+        <div className="preset-section">
+          <h3>Preset Scenarios</h3>
+          <p>Or select from predefined scenarios to quickly populate the values above.</p>
+          <PresetSelector 
+            onSelectPreset={handlePresetSelect} 
+            currentPreset={currentPreset}
+          />
+        </div>
       </form>
       
       {/* Warning Modal */}
