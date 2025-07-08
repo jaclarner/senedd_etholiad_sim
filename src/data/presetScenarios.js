@@ -121,13 +121,13 @@ const presetScenarios = [
       name: 'Polling average',
       description: 'Average of last three opinion polls (unweighted by provider)',
       votes: {
-        'Labour': 24.0,
-        'Conservatives': 15.0,
-        'PlaidCymru': 26.0,
-        'LibDems': 5.0,
-        'Greens': 5.0,
-        'Reform': 24.0,
-        'Other': 1.0
+        'Labour': 20.0,
+        'Conservatives': 10.0,
+        'PlaidCymru': 28.0,
+        'LibDems': 7.0,
+        'Greens': 6.0,
+        'Reform': 29.0,
+        'Other': 0.0
       },
       source: 'Polling average',
       category: 'polling'
