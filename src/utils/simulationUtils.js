@@ -75,49 +75,81 @@ export function combineConstituencyVotes(votes1, votes2, constituency1, constitu
 }
 
 /**
- * Apply swing model to baseline votes
- * @param {Object} baselineVotes - Baseline vote percentages
- * @param {Object} targetVotes - Target national vote percentages
- * @param {String} swingType - Type of swing model ('uniform' or 'proportional')
- * @returns {Object} Adjusted vote percentages
+ * Apply swing model to baseline votes with enhanced curve options
+ * This enhanced version provides multiple swing models including new curved approaches
+ * that handle extreme scenarios more realistically than simple proportional scaling
  */
 export function applySwing(baselineVotes, targetVotes, swingType = 'uniform') {
   const adjustedVotes = {};
   
-  // Calculate national baseline for reference
+  // Calculate national baseline for reference - this gives us the starting point
+  // for understanding how much each party has grown or declined nationally
   const nationalBaseline = {};
   for (const party in targetVotes) {
     nationalBaseline[party] = baselineNationalVotes[party] || targetVotes[party];
   }
   
-  // Apply swing based on model type
+  // Apply swing based on the model type selected by the user
   if (swingType === 'proportional') {
-    // Proportional swing: each party's vote changes in proportion to its baseline
+    // Original proportional swing - kept for backward compatibility
+    // This applies simple multiplication which can create unrealistic results
     for (const party in baselineVotes) {
       if (nationalBaseline[party] > 0) {
         const ratio = targetVotes[party] / nationalBaseline[party];
         adjustedVotes[party] = baselineVotes[party] * ratio;
       } else {
-        // Handle case where party had zero votes in baseline
+        // Handle edge case where party had zero votes in national baseline
         adjustedVotes[party] = targetVotes[party] * (baselineVotes[party] > 0 ? 1 : 0);
       }
     }
+  } else if (swingType === 'proportional-bounded') {
+    // NEW: Bounded proportional swing using square root dampening
+    // This is the recommended approach for most scenarios with large swings
+    for (const party in baselineVotes) {
+      if (nationalBaseline[party] > 0) {
+        const ratio = targetVotes[party] / nationalBaseline[party];
+        adjustedVotes[party] = applyBoundedProportionalSwing(
+          baselineVotes[party], 
+          ratio, 
+          party
+        );
+      } else {
+        // Handle new parties with realistic growth limits
+        // New parties can't just explode to huge percentages everywhere
+        adjustedVotes[party] = Math.min(targetVotes[party] * 1.2, 15);
+      }
+    }
+  } else if (swingType === 'proportional-logistic') {
+    // NEW: Logistic swing for the most sophisticated mathematical modeling
+    // Use this when you want the most realistic handling of all edge cases
+    for (const party in baselineVotes) {
+      if (nationalBaseline[party] > 0) {
+        const ratio = targetVotes[party] / nationalBaseline[party];
+        adjustedVotes[party] = applyLogisticSwing(baselineVotes[party], ratio);
+      } else {
+        // Even more conservative handling of new parties in logistic model
+        adjustedVotes[party] = Math.min(targetVotes[party] * 1.1, 12);
+      }
+    }
   } else {
-    // Default: Uniform swing - same percentage point change across all constituencies
+    // Default: Uniform swing - your existing approach
+    // This adds/subtracts the same percentage points everywhere
     for (const party in baselineVotes) {
       const swing = targetVotes[party] - nationalBaseline[party];
       adjustedVotes[party] = Math.max(0, baselineVotes[party] + swing);
     }
   }
   
-  // Make sure all parties from targetVotes are included
+  // Ensure all parties from targetVotes are included in the results
+  // This prevents missing parties that might be new or had zero baseline
   for (const party in targetVotes) {
     if (adjustedVotes[party] === undefined) {
-      adjustedVotes[party] = targetVotes[party] * 0.01; // Small placeholder value
+      adjustedVotes[party] = targetVotes[party] * 0.01; // Very small placeholder
     }
   }
   
-  // Normalize to ensure the total equals 100%
+  // Critical step: normalize to ensure the total equals exactly 100%
+  // This prevents mathematical drift that could invalidate the simulation
   const totalVotes = Object.values(adjustedVotes).reduce((sum, value) => sum + value, 0);
   for (const party in adjustedVotes) {
     adjustedVotes[party] = (adjustedVotes[party] / totalVotes) * 100;
@@ -466,4 +498,78 @@ export function findViableCoalitions(seatTotals, majorityThreshold) {
   });
   
   return coalitions;
+}
+
+/**
+ * Apply bounded proportional swing to avoid extreme results
+ * This function prevents parties from achieving unrealistic vote shares
+ * by using square root dampening for extreme growth scenarios
+ * @param {Number} baselineVote - The party's baseline vote percentage in this constituency
+ * @param {Number} swingRatio - How much the party has grown nationally (target/baseline)
+ * @param {String} party - Party name for applying specific behavioral rules
+ * @returns {Number} Adjusted vote percentage that respects realistic boundaries
+ */
+function applyBoundedProportionalSwing(baselineVote, swingRatio, party) {
+  let adjustedVote;
+  
+  if (swingRatio > 1) {
+    // This party is growing nationally, so we need to model growth with diminishing returns
+    const excessGrowth = swingRatio - 1;  // How much growth beyond 100% of baseline
+    const dampedGrowth = Math.sqrt(excessGrowth);  // Square root reduces extreme values
+    adjustedVote = baselineVote * (1 + dampedGrowth);  // Apply the dampened growth
+    
+    // Different parties have different realistic ceilings based on Welsh electoral history
+    let ceiling = 75; // Most major parties can theoretically reach 75% in their strongest areas
+    if (party === 'Reform' || party === 'Greens') {
+      ceiling = 25; // Smaller parties rarely exceed 25% even in favorable areas
+    } else if (party === 'Other') {
+      ceiling = 20;  // Independent and minor party candidates have lower realistic ceilings
+    }
+    
+    adjustedVote = Math.min(adjustedVote, ceiling);
+  } else {
+    // This party is declining nationally, so we need to model decline with some resistance
+    if (swingRatio < 0.5) {
+      // For very large losses (more than 50% decline), we dampen the effect
+      // This reflects the reality that parties rarely completely collapse everywhere at once
+      const excessLoss = 0.5 - swingRatio;
+      const dampedLoss = excessLoss * 0.7; // Reduce extreme losses by 30%
+      adjustedVote = baselineVote * (0.5 - dampedLoss);
+    } else {
+      // For moderate declines, apply them more directly
+      adjustedVote = baselineVote * swingRatio;
+    }
+    
+    // No party should fall below 0.1% - there are always a few loyal supporters
+    adjustedVote = Math.max(adjustedVote, 0.1);
+  }
+  
+  return adjustedVote;
+}
+
+/**
+ * Apply logistic curve swing for sophisticated electoral modeling
+ * This uses the mathematical properties of logit space to naturally bound results
+ * Logit transformation converts percentages to log-odds, which have natural bounds
+ * @param {Number} baselineVote - Baseline vote percentage (0-100)
+ * @param {Number} swingRatio - National swing ratio (target/baseline)
+ * @returns {Number} Logistically-adjusted vote percentage with natural bounds
+ */
+function applyLogisticSwing(baselineVote, swingRatio) {
+  // First, we ensure the baseline is within bounds that won't cause mathematical errors
+  const bounded = Math.max(0.5, Math.min(99.5, baselineVote));
+  const proportion = bounded / 100;  // Convert percentage to proportion (0-1)
+  
+  // Convert to logit space using the log-odds transformation
+  // This mathematical space naturally handles bounded growth
+  const logit = Math.log(proportion / (1 - proportion));
+  
+  // Apply the swing in logit space, with dampening to prevent extreme changes
+  const swingMagnitude = Math.log(swingRatio) * 0.7; // Dampen by 30%
+  const newLogit = logit + swingMagnitude;
+  
+  // Convert back to percentage space
+  const odds = Math.exp(newLogit);
+  const newProportion = odds / (1 + odds);
+  return newProportion * 100;
 }

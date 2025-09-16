@@ -1364,3 +1364,82 @@ body {
 .party-inputs .input-group .party-label {
   color: black !important;
 }
+
+/* Enhanced styling for the swing type selector section */
+/* This creates a more professional appearance and better user experience */
+
+.swing-type-selector {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f9fafb;  /* Light background to separate this important section */
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  transition: box-shadow 0.2s ease;  /* Subtle interaction feedback */
+}
+
+.swing-type-selector:hover {
+  box-shadow: var(--shadow-sm);  /* Gentle highlight on hover */
+}
+
+.swing-type-selector label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+  color: var(--text-color);
+}
+
+/* Enhanced select dropdown styling */
+.select-input {
+  width: 100%;
+  max-width: 400px;  /* Accommodate longer option names */
+  padding: 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-family: inherit;
+  font-size: 1rem;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.select-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.25);
+}
+
+/* Styling for the educational explanations */
+.swing-explanation {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+  border-left: 3px solid #e5e7eb;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.swing-explanation p {
+  margin: 0 0 0.5rem 0;
+}
+
+.swing-explanation p:last-child {
+  margin-bottom: 0;
+}
+
+/* Special styling for important callouts */
+.swing-explanation strong {
+  color: var(--primary-color);
+}
+
+/* Warning styling for the classic proportional option */
+.swing-explanation div p:nth-child(2) {
+  padding: 0.5rem;
+  background-color: #fef3c7;
+  border-left: 3px solid #f59e0b;
+  border-radius: 0.25rem;
+}
+
+/* Recommended styling for the bounded option */
+.swing-explanation strong:contains("Recommended") {
+  color: #059669;
+}

@@ -119,43 +119,58 @@ function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} 
     <>
       <form onSubmit={handleSubmit} className="party-input-form">
         <div className="swing-type-selector">
-          <label htmlFor="swing-type">Vote Calculation Method:</label>
-          <select 
-            id="swing-type" 
-            value={swingType} 
-            onChange={handleSwingTypeChange}
-            className="select-input"
-          >
-            <option value="uniform">Uniform National Swing</option>
-            <option value="proportional">Proportional Swing</option>
-            {/* Regional option temporarily removed
-            <option value="regional">Regional Variation</option>
-            */}
-          </select>
-          
-          {/* Help text based on selected swing type */}
-          <div className="swing-explanation">
-            {swingType === 'uniform' && (
-              <p>Uniform National Swing applies the same percentage point change to all constituencies.</p>
-            )}
-            {swingType === 'proportional' && (
-              <p>Proportional Swing applies changes proportionally to a party's baseline support in each constituency.</p>
-            )}
-            {/* Regional swing explanation temporarily removed
-            {swingType === 'regional' && (
-              <p>Regional Variation allows you to specify different swings for different regions of Wales.</p>
-            )}
-            */}
-          </div>
-          
-          {/* Regional swing configuration section temporarily removed
-          {swingType === 'regional' && (
-            <div className="regional-notice">
-              <p><i>(Currently trying to get this to work - check back soon!)</i></p>
-            </div>
-          )}
-          */}
-        </div>
+  <label htmlFor="swing-type">Vote Calculation Method:</label>
+  <select 
+    id="swing-type" 
+    value={swingType} 
+    onChange={handleSwingTypeChange}
+    className="select-input"
+  >
+    <option value="uniform">Uniform National Swing</option>
+    <option value="proportional">Proportional Swing (Classic)</option>
+    <option value="proportional-bounded">Proportional Swing (Bounded)</option>
+    <option value="proportional-logistic">Proportional Swing (Advanced)</option>
+    <option value="regional">Regional Variation</option>
+  </select>
+  
+ {/* Educational descriptions of swing modeling approaches */}
+<div className="swing-explanation">
+  {swingType === 'uniform' && (
+    <div>
+      <p>Uniform National Swing applies the same percentage point change to all constituencies. For example, if Labour gains 5 percentage points nationally, they gain exactly 5 points everywhere.</p>
+      <p>This approach assumes that electoral change happens evenly across geographic areas, regardless of parties' existing strength. It's mathematically simple and was historically popular in British electoral analysis, though it may not capture how parties actually grow or decline in their strongholds versus competitive areas.</p>
+    </div>
+  )}
+  {swingType === 'proportional' && (
+    <div>
+      <p>Proportional Swing applies changes relative to each party's existing strength in each constituency. If a party doubles nationally, it doubles everywhere - so a party with 10% baseline becomes 20%, while one with 30% baseline becomes 60%.</p>
+      <p>This approach assumes that electoral change is amplified in areas where parties are already strong. The 2024 UK general election showed patterns consistent with proportional swing, particularly for Reform UK's growth and some of Labour's gains. However, it can produce mathematically extreme results in scenarios with very large swings.</p>
+    </div>
+  )}
+  {swingType === 'proportional-bounded' && (
+    <div>
+      <p>Bounded Proportional Swing applies proportional changes but uses mathematical dampening to prevent extreme results. It assumes that parties face diminishing returns as they approach very high vote shares, and show some resistance to complete electoral collapse.</p>
+      <p>This approach reflects theories about electoral ceilings and floors, but may underestimate how dramatically parties can actually grow or decline during periods of political realignment. The mathematical constraints might not match real-world electoral behavior in all scenarios.</p>
+    </div>
+  )}
+  {swingType === 'proportional-logistic' && (
+    <div>
+      <p>Logistic Proportional Swing uses mathematical curves that naturally bound results between 0% and 100%. This approach assumes that electoral growth follows patterns similar to other bounded systems in nature and social science.</p>
+      <p>While mathematically elegant, this approach embeds strong theoretical assumptions about how electoral change works. These assumptions may or may not match the specific dynamics of Welsh electoral behavior, particularly during periods of significant political change.</p>
+    </div>
+  )}
+  {swingType === 'regional' && (
+    <p>Regional Variation allows different swing patterns across Welsh regions, reflecting the reality that parties often perform differently across geographic areas due to local political cultures, demographics, and campaign effects.</p>
+  )}
+</div>
+  
+  {/* Keep your existing regional configuration code */}
+  {swingType === 'regional' && (
+    <div className="regional-notice">
+      <p><i>(Currently trying to get this to work - check back soon!)</i></p>
+    </div>
+  )}
+</div>
         
         <div className="party-inputs">
           {Object.keys(votes).map(party => (
