@@ -105,12 +105,12 @@ const presetScenarios = [
       name: 'Green/LibDem Surge',
       description: 'Hypothetical scenario with increased support for Greens and Liberal Democrats',
       votes: {
-        'Labour': 30.0,
+        'Labour': 20.0,
         'Conservatives': 10.0,
-        'PlaidCymru': 20.0,
+        'PlaidCymru': 25.0,
         'LibDems': 12.0,
         'Greens': 12.0,
-        'Reform': 15.0,
+        'Reform': 20.0,
         'Other': 1.0
       },
       source: 'Hypothetical scenario',
@@ -119,15 +119,15 @@ const presetScenarios = [
     {
       id: 'polling_average',
       name: 'Polling average',
-      description: 'Average of last three opinion polls (unweighted by provider)',
+      description: 'Average of last three opinion polls (with N>1000)',
       votes: {
-        'Labour': 20.0,
-        'Conservatives': 10.0,
-        'PlaidCymru': 28.0,
+        'Labour': 16.6,
+        'Conservatives': 11.6,
+        'PlaidCymru': 29.0,
         'LibDems': 7.0,
         'Greens': 6.0,
-        'Reform': 29.0,
-        'Other': 0.0
+        'Reform': 27.6,
+        'Other': 2.2
       },
       source: 'Polling average',
       category: 'polling'
