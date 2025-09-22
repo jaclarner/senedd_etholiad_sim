@@ -24,16 +24,16 @@ const presetScenarios = [
       name: 'Most recent ITV Wales YouGov Poll',
       description: 'Based on recent Welsh polling data',
       votes: {
-        'Labour': 18.0,
-        'Conservatives': 13.0,
+        'Labour': 14.0,
+        'Conservatives': 11.0,
         'PlaidCymru': 30.0,
-        'LibDems': 7.0,
-        'Greens': 5.0,
-        'Reform': 25.0,
-        'Other': 2.0
+        'LibDems': 6.0,
+        'Greens': 6.0,
+        'Reform': 29.0,
+        'Other': 4.0
       },
       source: 'Most recent YouGov poll',
-      date: '2025-05-01',
+      date: '2025-09-10',
       category: 'polling'
     },
     {
