@@ -73,11 +73,11 @@ const presetScenarios = [
       name: 'Plaid Cymru Surge',
       description: 'Hypothetical scenario with increased Plaid Cymru support',
       votes: {
-        'Labour': 20.0,
+        'Labour': 15.0,
         'Conservatives': 15.0,
         'PlaidCymru': 35.0,
         'LibDems': 4.0,
-        'Greens': 3.0,
+        'Greens': 8.0,
         'Reform': 20.0,
         'Other': 3.0
       },
