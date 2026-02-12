@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/senedd_etholiad_sim/static/css/main.5d5dec17.css",
-    "main.js": "/senedd_etholiad_sim/static/js/main.6a441ca6.js",
+    "main.js": "/senedd_etholiad_sim/static/js/main.fcf716db.js",
     "index.html": "/senedd_etholiad_sim/index.html",
     "main.5d5dec17.css.map": "/senedd_etholiad_sim/static/css/main.5d5dec17.css.map",
-    "main.6a441ca6.js.map": "/senedd_etholiad_sim/static/js/main.6a441ca6.js.map"
+    "main.fcf716db.js.map": "/senedd_etholiad_sim/static/js/main.fcf716db.js.map"
   },
   "entrypoints": [
     "static/css/main.5d5dec17.css",
-    "static/js/main.6a441ca6.js"
+    "static/js/main.fcf716db.js"
   ]
 }
