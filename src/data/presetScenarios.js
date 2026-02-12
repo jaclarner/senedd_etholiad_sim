@@ -124,7 +124,7 @@ const presetScenarios = [
         'Labour': 13.0,
         'Conservatives': 12.0,
         'PlaidCymru': 31.0,
-        'LibDems': 6.0,
+        'LibDems': 5.0,
         'Greens': 10.0,
         'Reform': 27.0,
         'Other': 2.0
