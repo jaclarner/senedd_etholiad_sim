@@ -24,7 +24,7 @@ function ResultsDisplay({ results }) {
   }, [results]);
   
   // Extract data from results
-  const { nationalTotals, metrics, constituencyResults, closestContests } = results;
+  const { nationalTotals, metrics, constituencyResults } = results;
   
   // Handle constituency selection for allocation visualization
   const handleConstituencySelect = (e) => {

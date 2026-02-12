@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatDecimal, formatPartyName, getPartyColor } from '../utils/formatting';
-import { getPartyCompatibility, partyIdeology, ideologicalBlocs } from '../utils/coalitionUtils';
+import { partyIdeology, ideologicalBlocs } from '../utils/coalitionUtils';
 
 /**
  * Simplified component to display coalition analysis focused on ideological groupings

@@ -207,7 +207,6 @@ function generateParliamentSeats(seatTotals, totalSeats) {
   activeParties.forEach(party => {
     const partySeats = seatTotals[party];
     const partyStartAngle = startAngles[party];
-    const partyEndAngle = endAngles[party];
     const partySectionAngle = partyAngles[party];
     
     // Skip if this party has no seats

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import PartyInputForm from './PartyInputForm';
 import ResultsDisplay from './ResultsDisplay';
 import { calculateElectionResults } from '../utils/simulationEngine';
-import { baselineNationalVotes } from '../data/baselineVotes';
 import constituencyPairingsData from '../data/constituencyPairings';
 
 /**

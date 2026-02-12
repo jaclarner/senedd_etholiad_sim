@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { formatDecimal, formatPartyName, getPartyColor, getPartyColorWithOpacity } from '../utils/formatting';
+import { formatDecimal, formatPartyName, getPartyColor } from '../utils/formatting';
 
 /**
  * Component to visualize and explain the D'Hondt allocation process with uncertainty

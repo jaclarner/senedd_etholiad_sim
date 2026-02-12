@@ -3,7 +3,6 @@
 
 import baselineVotes from '../data/baselineVotes';
 import constituencyVoters from '../data/constituencyVoters';
-import { baselineNationalVotes } from '../data/baselineVotes';
 import regionDefinitions from '../data/regionDefinitions';
 
 // Import utility functions
@@ -14,8 +13,7 @@ import {
   applyRegionalSwing,
   dHondt,
   calculateGallagherIndex,
-  calculateEffectiveNumberOfParties,
-  findViableCoalitions
+  calculateEffectiveNumberOfParties
 } from './simulationUtils';
 
 /**
