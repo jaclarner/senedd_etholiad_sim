@@ -74,11 +74,11 @@ const presetScenarios = [
       description: 'Hypothetical scenario with increased Plaid Cymru support',
       votes: {
         'Labour': 15.0,
-        'Conservatives': 15.0,
+        'Conservatives': 10.0,
         'PlaidCymru': 35.0,
         'LibDems': 4.0,
         'Greens': 8.0,
-        'Reform': 20.0,
+        'Reform': 25.0,
         'Other': 3.0
       },
       source: 'Hypothetical scenario',
