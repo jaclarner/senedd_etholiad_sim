@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import MainSimulator from './components/MainSimulator';
 import AboutPage from './components/AboutPage';
 import MethodologyPage from './components/MethodologyPage';
+import ConstituencyEstimator from './components/ConstituencyEstimator'; // ← NEW
 import './styles/main.css';
 import './styles/responsive.css';
 
@@ -13,10 +14,13 @@ function App() {
     <Router basename="/senedd_etholiad_sim">
       <div className="app-container">
         <Header />
-        
+
         <nav className="main-nav">
           <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
             Simulator
+          </NavLink>
+          <NavLink to="/constituency" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+            Constituency  {/* ← NEW */}
           </NavLink>
           <NavLink to="/methodology" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
             Methodology
@@ -25,15 +29,16 @@ function App() {
             About
           </NavLink>
         </nav>
-        
+
         <main className="app-main">
           <Routes>
             <Route path="/" element={<MainSimulator />} />
+            <Route path="/constituency" element={<ConstituencyEstimator />} />  {/* ← NEW */}
             <Route path="/methodology" element={<MethodologyPage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>
         </main>
-        
+
         <Footer />
       </div>
     </Router>
