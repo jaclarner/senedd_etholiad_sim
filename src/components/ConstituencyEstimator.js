@@ -91,7 +91,7 @@ function ConstituencyEstimator() {
     setVotes(baseline);
     setDhondtResult(null);
     setHasCalculated(false);
-  }, [selectedIndex]);
+  }, [selectedIndex, selectedPairing]);
 
   // Handle a change to any party's vote share input
   const handleVoteChange = (party, value) => {
