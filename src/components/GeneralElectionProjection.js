@@ -232,7 +232,7 @@ function GeneralElectionProjection() {
               voting or differential turnout, all of which decide real
               first-past-the-post contests.
               {results.gains.length >= 10 && (
-                <> Large swings make this worse, not better: a change of this
+                <> Large swings make this worse: a change of this
                 size ({results.gains.length} of {results.totalSeats} seats)
                 is where uniform swing is least reliable, because in practice
                 support moves further in some places than others. Treat the
