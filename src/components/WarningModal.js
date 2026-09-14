@@ -28,8 +28,10 @@ function WarningModal({ isOpen, onClose, onConfirm }) {
         
         <div className="modal-body">
           <p className="warning-intro">
-            Please note that this simulator is designed as an <strong>educational tool</strong>, not a predictive model. It makes several assumptions about 2021 vote share (see methodology)
-            and should <strong>not</strong> be used to predict election outcomes.
+            Please note that this simulator is designed as an <strong>educational tool</strong>, not a
+            predictive model. It starts from the real 2026 Senedd election results, but everything you
+            change from there is a simplified model and should <strong>not</strong> be used to predict
+            election outcomes.
           </p>
           
           <div className="warning-details">
@@ -40,8 +42,8 @@ function WarningModal({ isOpen, onClose, onConfirm }) {
                 and does not account for local factors, candidate effects, or tactical voting.
               </li>
               <li>
-                <strong>Baseline data:</strong> Vote patterns are based on estimates from past elections adapted 
-                to new boundaries, and will <strong>contain errors</strong>.
+                <strong>Baseline data:</strong> The starting point is the actual 2026 constituency results,
+                so the baseline itself is not an estimate. What is modelled is how those votes would change.
               </li>
               <li>
                 <strong>Uniform changes:</strong> The default model applies changes uniformly across constituencies, 
@@ -52,9 +54,13 @@ function WarningModal({ isOpen, onClose, onConfirm }) {
                 or differential turnout.
               </li>
               <li>
-                <strong>Reform vote:</strong> Reform's baseline vote from 2021 is the combination of Reform UK estimates + Abolish estimates. This is a simple way of stopping 
-                extreme results when using swing models (a common problem when dealing with new popular parties). WES data shows this transfere of voters is a reasonable assumptions
-                but it will <strong> still contain errors</strong> .
+                <strong>Grouping of smaller parties:</strong> Every party that won no seats in 2026, along
+                with independents, is combined into a single "Other" category and modelled as one bloc.
+                Real minor-party and independent votes do <strong>not</strong> behave this way.
+              </li>
+              <li>
+                <strong>Closed lists:</strong> The simulator allocates seats to parties, not to individuals.
+                Who actually takes a seat depends on the order parties place candidates on their lists.
               </li>
             </ul>
             

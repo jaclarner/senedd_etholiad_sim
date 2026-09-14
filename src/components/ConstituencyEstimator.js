@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import constituencyPairingsData from '../data/constituencyPairings';
-import baselineVotes from '../data/baselineVotes';
-import constituencyVoters from '../data/constituencyVoters';
+import seneddConstituencies from '../data/seneddConstituencies';
+import seneddBaseline, { actualSeats2026 } from '../data/seneddResults2026';
 import DHondtExplainer from './DHondtExplainer';
 import { dHondt } from '../utils/simulationUtils';
 import { calculateVotesNeededToChange } from '../utils/simulationEngine';
@@ -12,31 +11,12 @@ import { formatPartyName, getPartyColor, formatDecimal } from '../utils/formatti
 const PARTIES = ['Labour', 'Conservatives', 'PlaidCymru', 'LibDems', 'Greens', 'Reform', 'Other'];
 
 /**
- * Combines baseline vote shares from two UK constituencies, weighted by electorate size.
- * Mirrors the logic in simulationEngine.js so results are consistent.
+ * Returns the actual 2026 vote shares for a Senedd constituency.
  */
-function getBaselineForPairing(c1, c2) {
-  const votes1 = baselineVotes[c1] || {};
-  const votes2 = baselineVotes[c2] || {};
-  const voters1 = constituencyVoters[c1] || 1;
-  const voters2 = constituencyVoters[c2] || 1;
-  const total = voters1 + voters2;
-  const w1 = voters1 / total;
-  const w2 = voters2 / total;
-
+function getBaselineFor(name) {
+  const baseline = seneddBaseline[name] || {};
   const combined = {};
-  PARTIES.forEach(party => {
-    combined[party] = ((votes1[party] || 0) * w1) + ((votes2[party] || 0) * w2);
-  });
-
-  // Normalise to 100%
-  const sum = Object.values(combined).reduce((a, b) => a + b, 0);
-  if (sum > 0) {
-    PARTIES.forEach(party => {
-      combined[party] = (combined[party] / sum) * 100;
-    });
-  }
-
+  PARTIES.forEach(party => { combined[party] = baseline[party] || 0; });
   return combined;
 }
 
@@ -81,17 +61,15 @@ function ConstituencyEstimator() {
   const [votesNeededToChange, setVotesNeededToChange] = useState(null);
   const [hasCalculated, setHasCalculated] = useState(false);
 
-  const selectedPairing = constituencyPairingsData[selectedIndex];
+  const selectedConstituency = seneddConstituencies[selectedIndex];
 
-  // Pre-fill vote shares from the 2021 baseline whenever the selected constituency changes
+  // Pre-fill vote shares from the 2026 result whenever the selected constituency changes
   useEffect(() => {
-    if (!selectedPairing) return;
-    const [c1, c2] = selectedPairing.ukConstituencies;
-    const baseline = getBaselineForPairing(c1, c2);
-    setVotes(baseline);
+    if (!selectedConstituency) return;
+    setVotes(getBaselineFor(selectedConstituency.name));
     setDhondtResult(null);
     setHasCalculated(false);
-  }, [selectedIndex, selectedPairing]);
+  }, [selectedIndex, selectedConstituency]);
 
   // Handle a change to any party's vote share input
   const handleVoteChange = (party, value) => {
@@ -99,11 +77,10 @@ function ConstituencyEstimator() {
     setVotes(prev => ({ ...prev, [party]: isNaN(num) || num < 0 ? 0 : num }));
   };
 
-  // Reset to the 2021 baseline for the selected constituency
+  // Reset to the actual 2026 result for the selected constituency
   const handleReset = () => {
-    if (!selectedPairing) return;
-    const [c1, c2] = selectedPairing.ukConstituencies;
-    setVotes(getBaselineForPairing(c1, c2));
+    if (!selectedConstituency) return;
+    setVotes(getBaselineFor(selectedConstituency.name));
     setDhondtResult(null);
     setHasCalculated(false);
   };
@@ -144,9 +121,9 @@ function ConstituencyEstimator() {
         <h2>Individual Constituency Estimator</h2>
         <p>
           Select one of the 16 Senedd constituencies and adjust the vote shares for that area to see
-          how the 6 seats would be allocated under the new system. Vote shares are pre-filled from the
-          2021 notional estimates I have generated for each constituency (e.g. my estimate of what the 
-          2021 election would have looked like under this new system and new bboundaries).
+          how its 6 seats would be allocated. Vote shares are pre-filled with the actual results of the
+          2026 Senedd election in that constituency, so you can start from what really happened and
+          change it.
         </p>
       </div>
 
@@ -164,9 +141,9 @@ function ConstituencyEstimator() {
             onChange={e => setSelectedIndex(parseInt(e.target.value))}
             className="ce-select"
           >
-            {constituencyPairingsData.map((pairing, i) => (
-              <option key={i} value={i}>
-                {pairing.seneddName} ({pairing.ukConstituencies.join(' + ')})
+            {seneddConstituencies.map((constituency, i) => (
+              <option key={constituency.name} value={i}>
+                {constituency.name} ({constituency.westminsterConstituencies.join(' + ')})
               </option>
             ))}
           </select>
@@ -174,7 +151,7 @@ function ConstituencyEstimator() {
 
         {/* Party vote share sliders + number inputs */}
         <div className="ce-party-inputs">
-          <h3>Vote Shares for <em>{selectedPairing?.seneddName}</em></h3>
+          <h3>Vote Shares for <em>{selectedConstituency?.name}</em></h3>
           <p className="ce-hint">
             Adjust the sliders or type values directly. Numbers are normalised to 100% when calculating.
           </p>
@@ -226,7 +203,7 @@ function ConstituencyEstimator() {
             Calculate Seats
           </button>
           <button className="btn btn-secondary" onClick={handleReset}>
-            Reset to 2021 Baseline
+            Reset to 2026 Result
           </button>
         </div>
       </div>
@@ -234,9 +211,16 @@ function ConstituencyEstimator() {
       {/* ── Results card ── */}
       {hasCalculated && dhondtResult && (
         <div className="card ce-results">
-          <h3>Results for {selectedPairing?.seneddName}</h3>
+          <h3>Results for {selectedConstituency?.name}</h3>
           <p className="ce-pairing-note">
-            Combined region: {selectedPairing?.ukConstituencies.join(' + ')}
+            Covers: {selectedConstituency?.westminsterConstituencies.join(' + ')}
+          </p>
+          <p className="ce-pairing-note">
+            <strong>Actual 2026 result:</strong>{' '}
+            {PARTIES
+              .filter(p => (actualSeats2026[selectedConstituency?.name] || {})[p] > 0)
+              .map(p => `${formatPartyName(p)} ${actualSeats2026[selectedConstituency.name][p]}`)
+              .join(', ')}
           </p>
 
           {/* Seat summary badges */}

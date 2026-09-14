@@ -1,6 +1,5 @@
 // src/utils/simulationUtils.js
-import constituencyVoters from '../data/constituencyVoters';
-import { baselineNationalVotes } from '../data/baselineVotes';
+import { baselineNationalVotes } from '../data/seneddResults2026';
 
 /**
  * Calculates national totals from constituency results
@@ -40,38 +39,6 @@ export function findClosestContests(constituencyResults, limit = 10) {
   
   // Return top N closest contests
   return contests.slice(0, limit);
-}
-
-/**
- * Combines vote percentages from two constituencies
- * @param {Object} votes1 - Vote percentages from first constituency
- * @param {Object} votes2 - Vote percentages from second constituency
- * @param {String} constituency1 - Name of first constituency
- * @param {String} constituency2 - Name of second constituency
- * @returns {Object} Combined vote percentages
- */
-export function combineConstituencyVotes(votes1, votes2, constituency1, constituency2) {
-  const combined = {};
-  
-  // Get the number of voters in each constituency for weighting
-  const voters1 = constituencyVoters[constituency1] || 1;
-  const voters2 = constituencyVoters[constituency2] || 1;
-  
-  // Calculate the weight for each constituency
-  const totalVoters = voters1 + voters2;
-  const weight1 = voters1 / totalVoters;
-  const weight2 = voters2 / totalVoters;
-  
-  // Combine the vote percentages with proper weighting
-  const allParties = new Set([...Object.keys(votes1), ...Object.keys(votes2)]);
-  
-  allParties.forEach(party => {
-    const v1 = votes1[party] || 0;
-    const v2 = votes2[party] || 0;
-    combined[party] = (v1 * weight1) + (v2 * weight2);
-  });
-  
-  return combined;
 }
 
 /**

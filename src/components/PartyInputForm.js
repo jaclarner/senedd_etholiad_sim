@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatDecimal, getPartyColor, formatPartyName } from '../utils/formatting';
-import { baselineNationalVotes } from '../data/baselineVotes';
+import { baselineNationalVotes } from '../data/seneddResults2026';
 import PresetSelector from './PresetSelector';
 
 /**
@@ -264,8 +264,8 @@ function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} 
                     and does not account for local factors, candidate effects, or tactical voting.
                   </li>
                   <li>
-                    <strong>Baseline data:</strong> Vote patterns are based on estimates from past elections adapted 
-                    to new boundaries, which may not reflect current political sentiment.
+                    <strong>Baseline data:</strong> Vote patterns start from the actual 2026 Senedd
+                    election results, which may not reflect current political sentiment.
                   </li>
                   <li>
                     <strong>Uniform changes:</strong> The default model applies changes uniformly across constituencies, 

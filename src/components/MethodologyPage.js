@@ -8,13 +8,13 @@ function MethodologyPage() {
       <div className="methodology-content">
         <h3>Electoral System</h3>
         <p>
-          The Senedd Election Simulator models the new electoral system for the Senedd (Welsh Parliament)
-          that will be used in future elections. This system uses:
+          The Senedd Election Simulator models the electoral system introduced for the Senedd
+          (Welsh Parliament) at the 2026 election. This system uses:
         </p>
         <ul>
-          <li>Paired constituencies that form multi-member electoral regions</li>
-          <li>The D'Hondt method of proportional representation to allocate seats</li>
-          <li>A total of 96 Members of the Senedd (MSs), with 6 MSs elected from each paired constituency</li>
+          <li>16 multi-member constituencies, each formed by pairing two Westminster constituencies</li>
+          <li>Closed party lists, with the D'Hondt method of proportional representation allocating seats</li>
+          <li>A total of 96 Members of the Senedd (MSs), with 6 MSs elected from each constituency</li>
         </ul>
         
         <h3>D'Hondt Method Explained</h3>
@@ -38,21 +38,35 @@ function MethodologyPage() {
         
         <h3>Baseline Data</h3>
         <p>
-          The simulator uses baseline data from the 2021 Senedd election, adjusted to the new constituency
-          boundaries. These constituency-level estimates were created using:
+          The simulator uses the <strong>actual results of the 2026 Senedd election</strong> as its
+          baseline. For each of the 16 constituencies it holds every party's share of the valid votes
+          cast, taken from the official constituency declarations.
+        </p>
+        <p>
+          Two things are worth noting about how that data is handled:
         </p>
         <ul>
-          <li>The official election results from the 2021 Senedd election</li>
-          <li>Welsh Election Study data</li>
-          <li>Boundary Commission data on the new constituency boundaries</li>
-          <li>Statistical modeling to estimate vote share in the new boundaries</li>
-          <li>Extra assumptions (like adding together 2021 Reform and Abolish estimates) to create more realistic seat totals.</li>
+          <li>
+            Vote shares are calculated as a percentage of <strong>valid</strong> votes. Rejected
+            ballots are excluded from the denominator.
+          </li>
+          <li>
+            The simulator works with seven groupings: Labour, the Conservatives, Plaid Cymru, the
+            Liberal Democrats, the Greens, Reform UK, and "Other". Every party that won no seats in
+            2026, together with independents, is combined into "Other".
+          </li>
         </ul>
         <p>
-          These estimates represent our best approximation of how the 2021 votes would have translated
-          to the new boundaries, but they are estimations rather than precise figures and <strong>should not be taken as notional results!</strong>
+          Running D'Hondt on this baseline reproduces the real 2026 seat allocation exactly in all 16
+          constituencies, so the starting point of the simulator matches the actual Senedd.
         </p>
-        
+        <p>
+          Previous versions of this tool used modelled estimates of the 2021 result on the new
+          boundaries. Those estimates are no longer used for the baseline. The 2021 figures remain
+          available as a historical preset, where Reform's share still combines the 2021 Reform UK and
+          Abolish the Welsh Assembly votes.
+        </p>
+
         <h3>Swing Calculation Models</h3>
         <p>
           The simulator offers three different methods for calculating how votes change from the baseline:
@@ -67,7 +81,9 @@ function MethodologyPage() {
           <dt>Proportional Swing</dt>
           <dd>
             Changes each party's vote share proportionally to their starting position in each constituency.
-            This reflects that parties often gain or lose more votes in areas where they're already strong. However is very sensitive to large swings or new parties (see Reform).
+            This reflects that parties often gain or lose more votes in areas where they're already strong.
+            It is very sensitive to large swings, and to parties starting from a low base, so it can produce
+            implausible results at the extremes.
           </dd>
           
           <dt>Regional Variation</dt>
@@ -142,6 +158,12 @@ function MethodologyPage() {
         <p>
           The methodology and assumptions in this simulator may be updated as new information becomes
           available or as feedback is incorporated. Major updates to the methodology will be noted here.
+        </p>
+        <p>
+          <strong>Update, 2026:</strong> Following the 2026 Senedd election, the simulator's baseline was
+          changed from modelled estimates of the 2021 result to the actual 2026 constituency results.
+          The tool now works directly with the 16 Senedd constituencies rather than deriving them from
+          pairs of Westminster constituencies.
         </p>
       </div>
     </section>

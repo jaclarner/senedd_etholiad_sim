@@ -3,7 +3,9 @@ import ParliamentVisualization from './ParliamentVisualization';
 import DHondtExplainer from './DHondtExplainer';
 import ProportionalityMetrics from './ProportionalityMetrics';
 import { formatDecimal, formatPartyName, getPartyColor } from '../utils/formatting';
-import { seneddConstituencyNames } from '../data/constituencyPairings';
+import { seneddConstituencyNames } from '../data/seneddConstituencies';
+import { actualSeats2026, actualNationalSeats2026 } from '../data/seneddResults2026';
+import SeatChangeSummary from './SeatChangeSummary';
 import CoalitionAnalysis from './CoalitionAnalysis'; // New component we'll create
 
 /**
@@ -62,6 +64,16 @@ function ResultsDisplay({ results }) {
           </div>
         </div>
         
+        {/* Change against the actual 2026 result */}
+        <div className="seat-change-section">
+          <h3 className="subsection-title">Change since the 2026 election</h3>
+          <SeatChangeSummary
+            actual={actualNationalSeats2026}
+            simulated={nationalTotals}
+            actualLabel="2026"
+          />
+        </div>
+
         {/* Parliament visualization */}
         <ParliamentVisualization 
           seatTotals={nationalTotals}
@@ -139,6 +151,16 @@ function ResultsDisplay({ results }) {
           </select>
         </div>
         
+        {/* Change against the actual 2026 result in this constituency */}
+        {constituencyResults.length > 0 && (
+          <SeatChangeSummary
+            actual={actualSeats2026[constituencyResults[selectedConstituency].constituency] || {}}
+            simulated={constituencyResults[selectedConstituency].results}
+            actualLabel="2026"
+            compact
+          />
+        )}
+
         {/* DHondt visualization component */}
         {constituencyResults.length > 0 && (
           <DHondtExplainer 

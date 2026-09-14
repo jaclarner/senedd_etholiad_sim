@@ -1625,3 +1625,104 @@ body {
     min-width: 100%;
   }
 }
+/* ── Seat change vs the 2026 result ── */
+.subsection-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--text-color);
+}
+
+.seat-change-section {
+  margin-bottom: 1.5rem;
+}
+
+.seat-change {
+  overflow-x: auto;
+}
+
+.seat-change-table {
+  width: 100%;
+  min-width: 22rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.seat-change-table th,
+.seat-change-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.seat-change-table thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-light);
+  border-bottom: 2px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.seat-change-table tbody tr:last-child th,
+.seat-change-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Party column stays left-aligned */
+.seat-change-table .seat-change-party {
+  text-align: left;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.seat-change-swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: 0.5rem;
+  border-radius: 2px;
+  vertical-align: baseline;
+}
+
+.seat-change-simulated {
+  font-weight: 600;
+}
+
+.seat-change-delta {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.seat-change-delta.positive {
+  color: var(--success-color);
+}
+
+.seat-change-delta.negative {
+  color: var(--error-color);
+}
+
+.seat-change-delta.unchanged {
+  color: var(--text-light);
+}
+
+.seat-change-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-light);
+}
+
+/* Tighter variant used inside the constituency breakdown */
+.seat-change-compact {
+  margin: 1rem 0 1.5rem;
+}
+
+.seat-change-compact .seat-change-table {
+  font-size: 0.85rem;
+}
+
+.seat-change-compact .seat-change-table th,
+.seat-change-compact .seat-change-table td {
+  padding: 0.375rem 0.5rem;
+}

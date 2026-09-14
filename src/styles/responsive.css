@@ -270,3 +270,14 @@
     transform: none !important;
   }
 }
+/* Seat change table on narrow screens */
+@media (max-width: 640px) {
+  .seat-change-table th,
+  .seat-change-table td {
+    padding: 0.4rem 0.5rem;
+  }
+
+  .seat-change-table thead th {
+    font-size: 0.7rem;
+  }
+}

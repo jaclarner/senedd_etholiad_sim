@@ -7,16 +7,17 @@ function AboutPage() {
       
       <div className="about-content">
         <p>
-          This is an informational tool that visualises seat distributions in a future Senedd 
-          election under the new voting system and an expanded Senedd. This is a work-in-progress 
-          and will be updated and improved over the coming months.
+          This is an informational tool that visualises how votes translate into seats in the Senedd
+          under the voting system introduced for the 2026 election. It starts from the actual results
+          of the 2026 Senedd election and lets you explore what would happen if those votes changed.
         </p>
         
         <h3>How it works</h3>
         <p>
-          The simulator uses the D'Hondt method of proportional representation to allocate seats 
-          within each constituency pairing. This is the system that will be used in future Senedd 
-          elections following electoral reforms.
+          Wales elects 96 Members of the Senedd from 16 constituencies, with 6 members returned from
+          each using closed party lists and the D'Hondt method of proportional representation. The
+          simulator takes the real 2026 vote share in each of those 16 constituencies, applies the
+          change you specify, and re-runs the D'Hondt allocation.
         </p>
         
         <h3>Assumptions and limitations</h3>
@@ -25,18 +26,21 @@ function AboutPage() {
         </p>
         <ul>
           <li>
-            It uses estimates of 2021 vote share under the new constituency boundaries using 
-            Welsh Election Study data. This is not a definitive description of what the 2021 
-            results would have looked like under the new electoral system and boundaries.
+            The baseline is the real 2026 result, so the starting point is no longer an estimate.
+            Everything after that point is a model, not a forecast.
           </li>
           <li>
-            Standard model assumes a uniform swing across all constituencies, which may not be the case 
-            in a real election. You can swap to proportional swing, but this has its own problems particularly
-            when dealing with large swings in vote intention.
+            The standard model assumes a uniform swing across all constituencies, which may not be the
+            case in a real election. You can swap to proportional swing, but this has its own problems,
+            particularly when dealing with large swings in vote intention.
+          </li>
+          <li>
+            Parties that won no seats in 2026, along with independents, are grouped together as
+            "Other". They are modelled as a single bloc, which is not how they would behave in reality.
           </li>
           <li>
             The tool does not account for tactical voting or local factors that might influence 
-            results in specific areas.
+            results in specific areas, and it cannot model who parties place at the top of their lists.
           </li>
         </ul>
         

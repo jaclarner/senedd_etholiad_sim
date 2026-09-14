@@ -47,7 +47,7 @@ function PresetVoteChart({ votes }) {
  */
 function PresetSelector({ onSelectPreset, currentPreset }) {
   // State to track which category is expanded
-  const [activeCategory, setActiveCategory] = useState('polling');
+  const [activeCategory, setActiveCategory] = useState('historical');
   
   const handlePresetSelect = (preset) => {
     onSelectPreset(preset);
@@ -82,6 +82,12 @@ function PresetSelector({ onSelectPreset, currentPreset }) {
       </div>
       
       <div className="preset-cards">
+        {activeCategory === 'polling' && pollingPresets.length === 0 && (
+          <p className="preset-empty">
+            No polls have been added since the 2026 Senedd election yet.
+          </p>
+        )}
+
         {activeCategory === 'historical' && historicalPresets.map(preset => (
           <div 
             key={preset.id} 
