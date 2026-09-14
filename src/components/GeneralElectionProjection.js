@@ -7,6 +7,7 @@ import {
 import { baselineNationalVotes as seneddNationalVotes2026 } from '../data/seneddResults2026';
 import SeatChangeSummary from './SeatChangeSummary';
 import HexMap from './HexMap';
+import westminsterPolls, { pollLabel } from '../data/westminsterPolls';
 import { formatPartyName, getPartyColor, formatDecimal, getContrastText } from '../utils/formatting';
 
 const PARTIES = ['Labour', 'Conservatives', 'PlaidCymru', 'LibDems', 'Greens', 'Reform', 'Other'];
@@ -37,6 +38,7 @@ function GeneralElectionProjection() {
   const [votes, setVotes] = useState({ ...baselineNationalVotes2024 });
   const [swingType, setSwingType] = useState('uniform');
   const [showAllSeats, setShowAllSeats] = useState(false);
+  const [selectedPoll, setSelectedPoll] = useState('');
 
   // Normalise to 100% before projecting, so the inputs need not total exactly 100
   const normalisedVotes = useMemo(() => {
@@ -57,7 +59,20 @@ function GeneralElectionProjection() {
     setVotes(prev => ({ ...prev, [party]: isNaN(num) || num < 0 ? 0 : num }));
   };
 
-  const applyQuickFill = (fill) => setVotes({ ...fill.votes });
+  const applyQuickFill = (fill) => {
+    setVotes({ ...fill.votes });
+    setSelectedPoll('');
+  };
+
+  // Load a published poll's headline figures into the inputs
+  const handlePollSelect = (e) => {
+    const id = e.target.value;
+    setSelectedPoll(id);
+    const poll = westminsterPolls.find(p => p.id === id);
+    if (poll) setVotes({ ...poll.votes });
+  };
+
+  const activePoll = westminsterPolls.find(p => p.id === selectedPoll);
 
   const inputTotal = PARTIES.reduce((acc, p) => acc + (votes[p] || 0), 0);
   const showNormalisationNote = Math.abs(inputTotal - 100) > 0.5;
@@ -101,6 +116,29 @@ function GeneralElectionProjection() {
               {fill.label}
             </button>
           ))}
+        </div>
+
+        <div className="ge-poll-picker">
+          <label htmlFor="ge-poll-select" className="ge-quickfill-label">
+            Or load a Welsh Westminster poll:
+          </label>
+          <select
+            id="ge-poll-select"
+            value={selectedPoll}
+            onChange={handlePollSelect}
+            className="select-input"
+          >
+            <option value="">Select a poll…</option>
+            {westminsterPolls.map(poll => (
+              <option key={poll.id} value={poll.id}>{pollLabel(poll)}</option>
+            ))}
+          </select>
+          {activePoll && (
+            <p className="ge-poll-meta">
+              Sample size {activePoll.sampleSize.toLocaleString()}. Figures as
+              published, normalised to 100% before projecting.
+            </p>
+          )}
         </div>
 
         {PARTIES.map(party => (
