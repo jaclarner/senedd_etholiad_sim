@@ -6,6 +6,7 @@ import {
 } from '../data/westminsterResults2024';
 import { baselineNationalVotes as seneddNationalVotes2026 } from '../data/seneddResults2026';
 import SeatChangeSummary from './SeatChangeSummary';
+import HexMap from './HexMap';
 import { formatPartyName, getPartyColor, formatDecimal, getContrastText } from '../utils/formatting';
 
 const PARTIES = ['Labour', 'Conservatives', 'PlaidCymru', 'LibDems', 'Greens', 'Reform', 'Other'];
@@ -205,6 +206,12 @@ function GeneralElectionProjection() {
                 ))
               }
             </div>
+          </div>
+
+          {/* Map of projected winners */}
+          <div className="card">
+            <h3 className="section-title">Projected winner by constituency</h3>
+            <HexMap constituencyResults={results.constituencyResults} />
           </div>
 
           {/* Constituency detail */}
