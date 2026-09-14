@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import presetScenarios from '../data/presetScenarios';
-import { getPartyColor, formatPartyName } from '../utils/formatting';
+import { getPartyColor, formatPartyName, formatDecimal } from '../utils/formatting';
 
 /**
  * Component to display a small chart of party vote percentages for a preset
@@ -31,7 +31,7 @@ function PresetVoteChart({ votes }) {
                 backgroundColor: getPartyColor(party)
               }}
             />
-            <span className="vote-bar-value">{votes[party]}%</span>
+            <span className="vote-bar-value">{formatDecimal(votes[party], 1)}%</span>
           </div>
         </div>
       ))}

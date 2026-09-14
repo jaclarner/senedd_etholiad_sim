@@ -207,7 +207,7 @@ function GeneralElectionProjection() {
               </div>
               <div className="summary-item">
                 <span className="label">Disproportionality:</span>
-                <span className="value">{formatDecimal(results.metrics.disproportionalityIndex, 2)}</span>
+                <span className="value">{formatDecimal(results.metrics.disproportionalityIndex, 1)}</span>
               </div>
               <div className="summary-item">
                 <span className="label">Closest seat:</span>

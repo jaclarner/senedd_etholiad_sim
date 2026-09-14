@@ -24,7 +24,7 @@ function App() {
             Constituency
           </NavLink>
           <NavLink to="/general-election" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            General Election
+            Westminster
           </NavLink>
           <NavLink to="/methodology" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
             Methodology

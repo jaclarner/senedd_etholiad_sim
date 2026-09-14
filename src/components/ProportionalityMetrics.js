@@ -83,7 +83,7 @@ function ProportionalityMetrics({ metrics }) {
             </div>
           </div>
           <div className="metric-value">
-            <span className="value">{formatDecimal(disproportionalityIndex, 2)}</span>
+            <span className="value">{formatDecimal(disproportionalityIndex, 1)}</span>
             <span className="interpretation">
               {getDisproportionalityInterpretation(disproportionalityIndex)}
             </span>
@@ -110,7 +110,7 @@ function ProportionalityMetrics({ metrics }) {
                   }}
                 ></div>
               </div>
-              <span className="enp-value">{formatDecimal(effectiveNumberOfPartiesVotes, 2)}</span>
+              <span className="enp-value">{formatDecimal(effectiveNumberOfPartiesVotes, 1)}</span>
               <span className="enp-interpretation">
                 {getENPInterpretation(effectiveNumberOfPartiesVotes)}
               </span>
@@ -127,7 +127,7 @@ function ProportionalityMetrics({ metrics }) {
                   }}
                 ></div>
               </div>
-              <span className="enp-value">{formatDecimal(effectiveNumberOfPartiesSeats, 2)}</span>
+              <span className="enp-value">{formatDecimal(effectiveNumberOfPartiesSeats, 1)}</span>
               <span className="enp-interpretation">
                 {getENPInterpretation(effectiveNumberOfPartiesSeats)}
               </span>
@@ -135,7 +135,7 @@ function ProportionalityMetrics({ metrics }) {
           </div>
           
           <div className="metric-value">
-            <span className="value">Fragmentation Reduction: {formatDecimal(fragmentationReduction, 2)}</span>
+            <span className="value">Fragmentation Reduction: {formatDecimal(fragmentationReduction, 1)}</span>
             <span className="interpretation">
               {fragmentationReduction > 0 ? 
                 "The electoral system reduces party fragmentation" : 

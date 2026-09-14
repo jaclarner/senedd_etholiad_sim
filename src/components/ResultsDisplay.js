@@ -60,7 +60,7 @@ function ResultsDisplay({ results }) {
           </div>
           <div className="summary-item">
             <span className="label">Disproportionality Index:</span>
-            <span className="value">{formatDecimal(metrics.disproportionalityIndex, 2)}</span>
+            <span className="value">{formatDecimal(metrics.disproportionalityIndex, 1)}</span>
           </div>
         </div>
         
