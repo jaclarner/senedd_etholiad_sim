@@ -489,12 +489,15 @@ function applyBoundedProportionalSwing(baselineVote, swingRatio, party) {
     const dampedGrowth = Math.sqrt(excessGrowth);  // Square root reduces extreme values
     adjustedVote = baselineVote * (1 + dampedGrowth);  // Apply the dampened growth
     
-    // Different parties have different realistic ceilings based on Welsh electoral history
-    let ceiling = 75; // Most major parties can theoretically reach 75% in their strongest areas
-    if (party === 'Reform' || party === 'Greens') {
-      ceiling = 25; // Smaller parties rarely exceed 25% even in favorable areas
+    // Different parties have different realistic ceilings based on Welsh electoral history.
+    // Reform was treated as a minor party here until 2026, when it took 29.3% of the vote
+    // and 34 Senedd seats, peaking at 36.2% in Fflint Wrecsam. A 25% ceiling would now cap
+    // it below its own national share, so it is treated as a major party.
+    let ceiling = 75; // Major parties can theoretically reach 75% in their strongest areas
+    if (party === 'Greens') {
+      ceiling = 30; // The Greens' best 2026 constituency result was 13.8%
     } else if (party === 'Other') {
-      ceiling = 20;  // Independent and minor party candidates have lower realistic ceilings
+      ceiling = 20; // Independents and minor parties have lower realistic ceilings
     }
     
     adjustedVote = Math.min(adjustedVote, ceiling);

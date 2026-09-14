@@ -185,6 +185,24 @@ function GeneralElectionProjection() {
               actualLabel="2024"
             />
 
+            {/* The bigger the swing, the less the model should be trusted */}
+            <div className="ge-caveat">
+              <strong>This is a model, not a forecast.</strong> It applies your
+              Wales-wide figures to every constituency using the swing model
+              selected above, then awards each seat to whoever leads. It knows
+              nothing about candidates, local campaigns, incumbency, tactical
+              voting or differential turnout, all of which decide real
+              first-past-the-post contests.
+              {results.gains.length >= 10 && (
+                <> Large swings make this worse, not better: a change of this
+                size ({results.gains.length} of {results.totalSeats} seats)
+                is where uniform swing is least reliable, because in practice
+                support moves further in some places than others. Treat the
+                headline seat numbers as an illustration of how first past the
+                post amplifies vote shares, not as a prediction.</>
+              )}
+            </div>
+
             {/* Seat bar */}
             <div className="ge-seat-bar">
               {PARTIES
