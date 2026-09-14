@@ -134,11 +134,6 @@ body {
   font-weight: 500;
 }
 
-.input-container {
-  flex: 1;
-  position: relative;
-}
-
 .party-input {
   width: 80px;
   padding: 0.5rem;
@@ -146,18 +141,6 @@ body {
   border-radius: var(--border-radius);
   font-family: inherit;
   font-size: 1rem;
-}
-
-.vote-indicator {
-  position: absolute;
-  left: 90px;
-  top: 0;
-  bottom: 0;
-  height: 4px;
-  margin-top: auto;
-  margin-bottom: auto;
-  border-radius: 2px;
-  transition: width 0.3s ease;
 }
 
 .total-percentage {
@@ -1075,53 +1058,68 @@ body {
 .input-group {
   display: flex;
   align-items: center;
-  margin-bottom: 1rem;
-  position: relative;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
 }
 
 .party-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   width: 150px;
   font-weight: 500;
   flex-shrink: 0;
   color: black;
 }
 
-.input-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.party-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 
 .party-input {
-  width: 80px;
-  padding: 0.5rem;
+  width: 76px;
+  padding: 0.4rem 0.5rem;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   font-family: inherit;
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+  text-align: right;
+  flex-shrink: 0;
 }
 
-.input-visualization {
-  display: flex;
-  align-items: center;
+.party-pct {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-left: -0.3rem;
+  flex-shrink: 0;
+}
+
+/* Proportion bar sitting on a neutral track */
+.vote-track {
+  flex: 1;
+  min-width: 40px;
   height: 8px;
-  width: 100%;
-  position: relative;
+  background: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .vote-indicator {
-  height: 8px;
+  position: static;
+  height: 100%;
   border-radius: 4px;
   transition: width 0.3s ease;
 }
 
 .vote-change {
-  position: absolute;
-  left: calc(100% + 8px);
+  width: 46px;
+  flex-shrink: 0;
+  text-align: right;
   font-size: 0.8rem;
-  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   color: var(--text-light);
 }
 
@@ -1136,26 +1134,20 @@ body {
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .input-group {
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 1.5rem;
+    gap: 0.4rem;
   }
-  
+
   .party-label {
-    width: 100%;
-    margin-bottom: 0.5rem;
+    width: 96px;
+    font-size: 0.875rem;
   }
-  
+
   .party-input {
-    width: 100%;
-    max-width: 120px;
+    width: 62px;
   }
-  
+
   .vote-change {
-    position: static;
-    margin-left: 0.5rem;
-    display: block;
-    margin-top: 0.25rem;
+    width: 40px;
   }
 }
 
@@ -1725,4 +1717,147 @@ body {
 .seat-change-compact .seat-change-table th,
 .seat-change-compact .seat-change-table td {
   padding: 0.375rem 0.5rem;
+}
+
+/* ── Westminster projection page ── */
+.ge-note {
+  font-size: 0.875rem;
+  color: var(--text-light);
+}
+
+.btn-small {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8125rem;
+}
+
+.ge-quickfill {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ge-quickfill-label {
+  font-size: 0.875rem;
+  color: var(--text-light);
+}
+
+.ge-swing-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Horizontal bar of projected seats */
+.ge-seat-bar {
+  display: flex;
+  height: 2rem;
+  margin-top: 1.25rem;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.ge-seat-bar-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  min-width: 2px;
+}
+
+.ge-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ge-table-wrap {
+  overflow-x: auto;
+}
+
+.ge-table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.ge-table th,
+.ge-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.ge-table thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-light);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.ge-table .ge-constituency {
+  text-align: left;
+  font-weight: 500;
+  white-space: normal;
+}
+
+.ge-row-gain {
+  background: rgba(4, 120, 87, 0.05);
+}
+
+.ge-party-tag {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ge-tight {
+  color: var(--error-color);
+  font-weight: 600;
+}
+
+/* Collapsible swing-model explainer */
+.swing-explanation > summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  padding: 0.4rem 0;
+  list-style-position: inside;
+}
+
+.swing-explanation > summary:hover {
+  text-decoration: underline;
+}
+
+.swing-explanation[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+.input-intro {
+  margin: -0.25rem 0 1.25rem;
+  font-size: 0.875rem;
+  color: var(--text-light);
+}
+
+/* Keep the projection's input rows readable on a full-width card */
+.ge-projection .ce-party-row {
+  max-width: 620px;
+  grid-template-columns: 14px 140px 1fr 64px 20px;
 }

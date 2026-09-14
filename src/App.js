@@ -5,7 +5,8 @@ import Footer from './components/Footer';
 import MainSimulator from './components/MainSimulator';
 import AboutPage from './components/AboutPage';
 import MethodologyPage from './components/MethodologyPage';
-import ConstituencyEstimator from './components/ConstituencyEstimator'; // ← NEW
+import ConstituencyEstimator from './components/ConstituencyEstimator';
+import GeneralElectionProjection from './components/GeneralElectionProjection';
 import './styles/main.css';
 import './styles/responsive.css';
 
@@ -20,7 +21,10 @@ function App() {
             Simulator
           </NavLink>
           <NavLink to="/constituency" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
-            Constituency  {/* ← NEW */}
+            Constituency
+          </NavLink>
+          <NavLink to="/general-election" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+            General Election
           </NavLink>
           <NavLink to="/methodology" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
             Methodology
@@ -33,7 +37,8 @@ function App() {
         <main className="app-main">
           <Routes>
             <Route path="/" element={<MainSimulator />} />
-            <Route path="/constituency" element={<ConstituencyEstimator />} />  {/* ← NEW */}
+            <Route path="/constituency" element={<ConstituencyEstimator />} />
+            <Route path="/general-election" element={<GeneralElectionProjection />} />
             <Route path="/methodology" element={<MethodologyPage />} />
             <Route path="/about" element={<AboutPage />} />
           </Routes>

@@ -134,7 +134,8 @@ function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} 
   </select>
   
  {/* Educational descriptions of swing modeling approaches */}
-<div className="swing-explanation">
+<details className="swing-explanation">
+  <summary>How this swing model works</summary>
   {swingType === 'uniform' && (
     <div>
       <p>Uniform National Swing applies the same percentage point change to all constituencies. For example, if Labour gains 5 percentage points nationally, they gain exactly 5 points everywhere.</p>
@@ -162,7 +163,7 @@ function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} 
   {swingType === 'regional' && (
     <p>Regional Variation allows different swing patterns across Welsh regions, reflecting the reality that parties often perform differently across geographic areas due to local political cultures, demographics, and campaign effects.</p>
   )}
-</div>
+</details>
   
   {/* Keep your existing regional configuration code */}
   {swingType === 'regional' && (
@@ -176,36 +177,46 @@ function PartyInputForm({ initialVotes, onSubmit, currentSimulationOptions = {} 
           {Object.keys(votes).map(party => (
             <div key={party} className="input-group">
               <label htmlFor={`input-${party}`} className="party-label">
-                {formatPartyName(party)}:
-              </label>
-              <div className="input-container">
-                <input
-                  id={`input-${party}`}
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={votes[party]}
-                  onChange={(e) => handleInputChange(party, e.target.value)}
-                  className="party-input"
+                <span
+                  className="party-swatch"
+                  style={{ backgroundColor: getPartyColor(party) }}
                 />
-                <div className="input-visualization">
-                  <div 
-                    className="vote-indicator"
-                    style={{
-                      width: `${votes[party]}%`,
-                      backgroundColor: getPartyColor(party),
-                      maxWidth: '100%'
-                    }}
-                  />
-                  
-                  {/* Show change from baseline */}
-                  <div className={`vote-change ${votes[party] > baselineNationalVotes[party] ? 'positive' : votes[party] < baselineNationalVotes[party] ? 'negative' : ''}`}>
-                    {votes[party] > baselineNationalVotes[party] ? '+' : ''}
-                    {formatDecimal(votes[party] - baselineNationalVotes[party], 1)}
-                  </div>
-                </div>
+                {formatPartyName(party)}
+              </label>
+
+              <input
+                id={`input-${party}`}
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={votes[party]}
+                onChange={(e) => handleInputChange(party, e.target.value)}
+                className="party-input"
+              />
+              <span className="party-pct">%</span>
+
+              <div className="vote-track">
+                <div
+                  className="vote-indicator"
+                  style={{
+                    width: `${Math.min(100, votes[party])}%`,
+                    backgroundColor: getPartyColor(party)
+                  }}
+                />
               </div>
+
+              {/* Change from the 2026 baseline */}
+              <span
+                className={`vote-change ${
+                  votes[party] > baselineNationalVotes[party] ? 'positive'
+                    : votes[party] < baselineNationalVotes[party] ? 'negative'
+                    : ''
+                }`}
+              >
+                {votes[party] > baselineNationalVotes[party] ? '+' : ''}
+                {formatDecimal(votes[party] - baselineNationalVotes[party], 1)}
+              </span>
             </div>
           ))}
         </div>

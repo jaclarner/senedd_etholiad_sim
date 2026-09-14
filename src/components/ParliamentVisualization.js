@@ -23,12 +23,8 @@ function ParliamentVisualization({ seatTotals, majorityThreshold }) {
   useEffect(() => {
     // Only proceed if we have actual data
     if (totalSeats > 0) {
-      console.log("Generating seats for:", seatTotals, "total:", totalSeats);
-      const generatedSeats = generateParliamentSeats(seatTotals, totalSeats);
-      setSeats(generatedSeats);
-      console.log("Generated seats:", generatedSeats.length);
+      setSeats(generateParliamentSeats(seatTotals, totalSeats));
     } else {
-      console.log("No seats to generate - total seats:", totalSeats);
       setSeats([]);
     }
   }, [seatTotals, totalSeats]);
@@ -125,227 +121,120 @@ function ParliamentVisualization({ seatTotals, majorityThreshold }) {
 }
 
 /**
- * Helper function to generate seat positions in a hemicycle layout with parties grouped
- * @param {Object} seatTotals - Object with party names as keys and seat counts as values
- * @param {Number} totalSeats - Total number of seats to display
- * @returns {Array} Array of seat objects with position and party information
+ * Generate seat positions for a hemicycle.
+ *
+ * All parties share the same concentric rows, and seats are filled in political
+ * order sweeping from the left of the chamber to the right. Each party therefore
+ * occupies one continuous wedge spanning every row, which is how parliament
+ * diagrams are normally drawn.
+ *
+ * @param {Object} seatTotals - Seats held by each party
+ * @param {Number} totalSeats - Total seats to place
+ * @returns {Array} Seat objects with position, party and abbreviation
  */
 function generateParliamentSeats(seatTotals, totalSeats) {
-  // Initialize empty array to hold all seat objects
-  const seats = [];
-  
-  // Layout configuration for full 96-seat chamber
-  const centerX = 500;  // Center of the SVG horizontally
-  const baseY = 450;    // Bottom of the arc
-  const radius = 340;   // Radius of the outer row
-  const rowSpacing = 40; // Distance between rows
-  const rowCount = 8;   // Fixed number of rows for 96 seats
-  
-  // Minimum angle width for small parties (in radians)
-  // This ensures even parties with few seats get adequate space
-  const minPartyAngle = 0.12; // About 7 degrees
-  
-  // Political ordering from left to right in the chamber
-  // This defines the position in the hemicycle, with left-wing parties on the left,
-  // centrists in the middle, and right-wing parties on the right
+  if (totalSeats <= 0) return [];
+
+  // Geometry of the chamber within the 1000x500 viewBox
+  const centerX = 500;
+  const baseY = 455;
+  const outerRadius = 395;
+  const innerRadius = 170;
+
+  // More seats need more rows to stay legible
+  const rowCount = totalSeats > 80 ? 6 : totalSeats > 40 ? 5 : totalSeats > 18 ? 3 : 2;
+
+  // Row radii, evenly spaced from the inner row outwards
+  const radii = [];
+  for (let row = 0; row < rowCount; row++) {
+    const t = rowCount === 1 ? 1 : row / (rowCount - 1);
+    radii.push(innerRadius + (outerRadius - innerRadius) * t);
+  }
+
+  // Seats per row in proportion to each row's arc length, which scales with radius
+  const totalRadius = radii.reduce((sum, r) => sum + r, 0);
+  const seatsPerRow = radii.map(r => Math.max(1, Math.round((totalSeats * r) / totalRadius)));
+
+  // Rounding rarely lands on exactly totalSeats, so correct from the outside in
+  let drift = totalSeats - seatsPerRow.reduce((sum, n) => sum + n, 0);
+  let cursor = seatsPerRow.length - 1;
+  while (drift !== 0) {
+    const step = drift > 0 ? 1 : -1;
+    if (seatsPerRow[cursor] + step >= 1) {
+      seatsPerRow[cursor] += step;
+      drift -= step;
+    }
+    cursor = (cursor - 1 + seatsPerRow.length) % seatsPerRow.length;
+  }
+
+  // Build every seat position, then order them left to right across the whole arc
+  const positions = [];
+  radii.forEach((radius, row) => {
+    const seatsInRow = seatsPerRow[row];
+
+    for (let i = 0; i < seatsInRow; i++) {
+      // Fraction along the row, inset slightly so seats clear the chamber floor
+      const t = seatsInRow === 1 ? 0.5 : i / (seatsInRow - 1);
+      const inset = 0.5 + (t - 0.5) * 0.94;
+
+      // Angle pi points to the left of the chamber, 0 to the right
+      const angle = Math.PI * (1 - inset);
+
+      positions.push({
+        row,
+        angle,
+        x: centerX + radius * Math.cos(angle),
+        y: baseY - radius * Math.sin(angle)
+      });
+    }
+  });
+
+  // Sweep from the left of the chamber (angle pi) round to the right (angle 0)
+  positions.sort((a, b) => b.angle - a.angle || a.row - b.row);
+
+  // Seating order, left wing through to right wing
   const politicalOrder = [
     'Greens', 'PlaidCymru', 'Labour', 'LibDems', 'Conservatives', 'Reform', 'Other'
   ];
-  
-  // Filter to only include parties with seats
-  const activeParties = politicalOrder.filter(party => seatTotals[party] && seatTotals[party] > 0);
-  
-  // Add any parties not in the political order that have seats
+
+  const seatedParties = politicalOrder.filter(party => seatTotals[party] > 0);
+
+  // Any party missing from the ordering still needs a place
   Object.keys(seatTotals).forEach(party => {
     if (!politicalOrder.includes(party) && seatTotals[party] > 0) {
-      activeParties.push(party);
+      seatedParties.push(party);
     }
   });
-  
-  // Calculate the total angle of the hemicycle (180 degrees = π radians)
-  const totalAngle = Math.PI;
-  
-  // First, calculate the minimum space needed for all parties
-  let minRequiredAngle = 0;
-  activeParties.forEach(party => {
-    // For small parties, ensure they get at least the minimum angle
-    if (seatTotals[party] <= 3) {
-      minRequiredAngle += minPartyAngle;
-    }
-  });
-  
-  // Calculate how much angle is left for proportional distribution
-  const remainingAngle = Math.max(0, totalAngle - minRequiredAngle);
-  const remainingSeats = totalSeats - activeParties.filter(p => seatTotals[p] <= 3).reduce((sum, p) => sum + seatTotals[p], 0);
-  
-  // Divide the hemicycle into sections for each party
-  // The angle size for each party is proportional to their seat count,
-  // with a minimum for small parties
-  let partyAngles = {};
-  let startAngles = {};
-  let endAngles = {};
-  
-  let currentAngle = 0;
-  activeParties.forEach(party => {
-    let partyAngle;
-    
-    // For small parties, use the minimum angle
-    if (seatTotals[party] <= 3) {
-      partyAngle = minPartyAngle;
-    } else {
-      // For larger parties, allocate space proportionally from the remaining angle
-      partyAngle = (seatTotals[party] / remainingSeats) * remainingAngle;
-    }
-    
-    partyAngles[party] = partyAngle;
-    startAngles[party] = currentAngle;
-    currentAngle += partyAngle;
-    endAngles[party] = currentAngle;
-  });
-  
-  // Now place seats for each party in their own section
-  activeParties.forEach(party => {
-    const partySeats = seatTotals[party];
-    const partyStartAngle = startAngles[party];
-    const partySectionAngle = partyAngles[party];
-    
-    // Skip if this party has no seats
-    if (partySeats <= 0) return;
-    
-    // For parties with few seats, use a single row with wider spacing
-    if (partySeats <= 3) {
-      // Place all seats in a single outer row
-      const rowRadius = radius - 50; // Place small parties a bit further in for better visibility
-      
-      // Determine how many seats to place
-      for (let i = 0; i < partySeats; i++) {
-        // Calculate even spacing across the section
-        const angle = partyStartAngle + ((i + 0.5) / partySeats) * partySectionAngle;
-        
-        const x = centerX + rowRadius * Math.cos(angle);
-        const y = baseY - rowRadius * Math.sin(angle);
-        
-        // Create abbreviation for the party
-        const abbrev = party === 'PlaidCymru' ? 'PC' :
-                     party === 'Conservatives' ? 'C' :
-                     party === 'Labour' ? 'L' :
-                     party === 'LibDems' ? 'LD' :
-                     party === 'Greens' ? 'G' :
-                     party === 'Reform' ? 'R' : 'O';
-        
-        // Add the seat
-        seats.push({
-          x,
-          y,
-          party,
-          abbrev
-        });
-      }
-    } else {
-      // For parties with more seats, use the multi-row layout
-      
-      // Determine how many rows we'll use for this party
-      // More seats = more rows (up to rowCount)
-      const partyRowCount = Math.min(
-        rowCount, 
-        Math.max(2, Math.ceil(partySeats / 12))
-      );
-      
-      // Calculate seats per row for this party
-      // We want more seats in outer rows for better visibility
-      const partyRowDistribution = calculatePartyRowDistribution(partySeats, partyRowCount);
-      
-      // For each row of this party's section
-      let seatIndex = 0;
-      for (let row = 0; row < partyRowCount; row++) {
-        const rowRadius = radius - (row * rowSpacing);
-        const seatsInRow = partyRowDistribution[row];
-        
-        // Skip empty rows
-        if (seatsInRow <= 0) continue;
-        
-        // Calculate angle step for seats in this row
-        const angleStep = partySectionAngle / (seatsInRow + 1);
-        
-        // Place each seat in this row
-        for (let i = 0; i < seatsInRow; i++) {
-          // Skip if we've already placed all seats for this party
-          if (seatIndex >= partySeats) break;
-          
-          // Calculate position
-          const angle = partyStartAngle + angleStep * (i + 1);
-          const x = centerX + rowRadius * Math.cos(angle);
-          const y = baseY - rowRadius * Math.sin(angle);
-          
-          // Create abbreviation for the party
-          const abbrev = party === 'PlaidCymru' ? 'PC' :
-                       party === 'Conservatives' ? 'C' :
-                       party === 'Labour' ? 'L' :
-                       party === 'LibDems' ? 'LD' :
-                       party === 'Greens' ? 'G' :
-                       party === 'Reform' ? 'R' : 'O';
-          
-          // Add the seat
-          seats.push({
-            x,
-            y,
-            party,
-            abbrev
-          });
-          
-          seatIndex++;
-        }
-      }
-    }
-  });
-  
-  return seats;
-}
 
-/**
- * Calculate distribution of seats across rows for a specific party
- * @param {Number} partySeats - Number of seats for this party
- * @param {Number} rowCount - Maximum number of rows to use
- * @returns {Array} Number of seats for each row
- */
-function calculatePartyRowDistribution(partySeats, rowCount) {
-  // For a full 96-seat chamber, we need a better distribution
-  // that places more seats in outer rows but ensures good spacing
-  
-  // Create a distribution with more seats in outer rows and fewer in inner rows
-  const distribution = [];
-  
-  // Set weights for each row - outer rows get higher weights
-  const weights = [];
-  for (let i = 0; i < rowCount; i++) {
-    // Decreasing weights from outer to inner rows
-    weights.push(2.0 - (i * (1.0 / rowCount)));
-  }
-  
-  // Calculate total weight
-  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-  
-  // Calculate initial distribution
-  let remainingSeats = partySeats;
-  for (let i = 0; i < rowCount; i++) {
-    // Calculate seats for this row based on weight
-    const rowSeats = Math.round((weights[i] / totalWeight) * partySeats);
-    // Ensure we don't allocate more seats than available
-    const actualRowSeats = Math.min(rowSeats, remainingSeats);
-    distribution.push(actualRowSeats);
-    remainingSeats -= actualRowSeats;
-  }
-  
-  // If we still have seats to distribute (due to rounding),
-  // add them to rows that can fit more
-  let row = 0;
-  while (remainingSeats > 0) {
-    distribution[row % rowCount]++;
-    remainingSeats--;
-    row++;
-  }
-  
-  return distribution;
+  const abbreviations = {
+    PlaidCymru: 'PC',
+    Conservatives: 'C',
+    Labour: 'L',
+    LibDems: 'LD',
+    Greens: 'G',
+    Reform: 'R',
+    Other: 'O'
+  };
+
+  const seats = [];
+  let positionIndex = 0;
+
+  seatedParties.forEach(party => {
+    for (let i = 0; i < seatTotals[party]; i++) {
+      const position = positions[positionIndex];
+      if (!position) return;
+      positionIndex += 1;
+
+      seats.push({
+        x: position.x,
+        y: position.y,
+        party,
+        abbrev: abbreviations[party] || party.slice(0, 2).toUpperCase()
+      });
+    }
+  });
+
+  return seats;
 }
 
 export default ParliamentVisualization;

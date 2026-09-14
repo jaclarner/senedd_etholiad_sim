@@ -43,20 +43,6 @@
     width: 100%;
   }
   
-  .party-input {
-    width: 100%;
-    max-width: 120px;
-  }
-  
-  .vote-indicator {
-    left: 130px;
-  }
-  
-  .vote-change {
-    display: block;
-    margin-top: 0.25rem;
-  }
-  
   .party-row {
     grid-template-columns: 100px 1fr;
   }

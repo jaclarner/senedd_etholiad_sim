@@ -46,14 +46,17 @@ export function findClosestContests(constituencyResults, limit = 10) {
  * This enhanced version provides multiple swing models including new curved approaches
  * that handle extreme scenarios more realistically than simple proportional scaling
  */
-export function applySwing(baselineVotes, targetVotes, swingType = 'uniform') {
+export function applySwing(baselineVotes, targetVotes, swingType = 'uniform', nationalBaselineOverride = null) {
   const adjustedVotes = {};
-  
+
   // Calculate national baseline for reference - this gives us the starting point
-  // for understanding how much each party has grown or declined nationally
+  // for understanding how much each party has grown or declined nationally.
+  // Callers working from a different election (e.g. the Westminster projection)
+  // pass their own national baseline rather than the Senedd one.
+  const referenceBaseline = nationalBaselineOverride || baselineNationalVotes;
   const nationalBaseline = {};
   for (const party in targetVotes) {
-    nationalBaseline[party] = baselineNationalVotes[party] || targetVotes[party];
+    nationalBaseline[party] = referenceBaseline[party] || targetVotes[party];
   }
   
   // Apply swing based on the model type selected by the user
@@ -132,12 +135,13 @@ export function applySwing(baselineVotes, targetVotes, swingType = 'uniform') {
  * @param {Object} regionalSwing - Regional swing adjustments
  * @returns {Object} Adjusted vote percentages
  */
-export function applyRegionalSwing(baselineVotes, nationalVotes, regionalSwing) {
+export function applyRegionalSwing(baselineVotes, nationalVotes, regionalSwing, nationalBaselineOverride = null) {
+  const referenceBaseline = nationalBaselineOverride || baselineNationalVotes;
   const swingVotes = {};
   
   // First apply national swing as the baseline
   for (const party in baselineVotes) {
-    const nationalSwing = nationalVotes[party] - baselineNationalVotes[party];
+    const nationalSwing = nationalVotes[party] - referenceBaseline[party];
     swingVotes[party] = Math.max(0, baselineVotes[party] + nationalSwing);
   }
   
